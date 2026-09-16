@@ -2,7 +2,7 @@
 
 **The whole gog CLI, in Claude Desktop, behind a policy.**
 
-[gog](https://github.com/steipete/gogcli) is a command line tool for Google Workspace:
+[gog](https://github.com/openclaw/gogcli) is a command line tool for Google Workspace:
 Gmail, Calendar, Drive, Docs, Sheets, Slides, Contacts, Tasks, Keep and more, on as many
 accounts as you have signed in. It ships its own MCP server, `gog mcp`, and that server is
 deliberately small: measured on v0.40.0, it exposes 8 read-only tools by default and 10 with
@@ -53,8 +53,9 @@ in for you: `auth` is one of the commands it refuses. Transport is stdio and std
 
 **Windows note.** Claude Desktop does not always see the PATH your terminal sees. If the
 server fails to start because `uvx` is not found, put the absolute path of `uvx.exe` in
-`command`, for example `C:\\Users\\you\\.local\\bin\\uvx.exe`. `where uvx` in a terminal prints it. The bridge
-starts gog with `CREATE_NO_WINDOW`, so no console flashes behind the application.
+`command`, for example `C:\\Users\\you\\.local\\bin\\uvx.exe`. `where uvx` in a terminal prints
+it. The bridge starts gog with `CREATE_NO_WINDOW`, so no console should flash behind the
+application.
 
 ## 🚀 Quickstart
 
@@ -112,7 +113,7 @@ Checked before any process is spawned. The messages are in French, for the model
 
 | Refused | Why |
 |---|---|
-| First argument `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, or the `auth` aliases `login`, `logout`, `status` | Administration of the local gog installation, not Workspace operations. |
+| The command `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, or the `auth` aliases `login`, `logout`, `status` | Administration of the local gog installation, not Workspace operations. The command is the first argument that is not a global flag, so `--json auth list` and `--color auto auth list` are refused too. |
 | Any argument starting with `--account`, `--home`, `--client`, `--access-token`, `--quota-project`, `--enable-commands`, `--disable-commands` | Each one changes who gog acts as, where it reads its configuration, or which commands exist. Prefix match, so `--account=x` and `--enable-commands-exact` are covered. |
 | The short account flag in every form kong parses: `-a`, `-a=x`, `-ax`, and clusters such as `-ja` or `-jaX` | Same as `--account`. A single dash followed by letters with an `a` among them is refused; `-n5a` is a value and passes. |
 | Empty `args` on `gog_run` | Nothing to run. `gog_help` accepts it and prints the top-level help. |
@@ -149,8 +150,15 @@ make build     # uv build
 ```
 
 The tests spawn `tests/fake_gog.py` through a platform wrapper, a `.cmd` on Windows and a
-shell script elsewhere, so the real asyncio runner is exercised on both. CI runs the suite on
-Ubuntu and Windows, Python 3.12 and 3.13.
+shell script elsewhere, so the same asyncio runner is under test on both. The CI matrix covers
+Ubuntu and Windows, Python 3.12 and 3.13; a release waits for the Windows job to be green.
+
+## 📚 Documentation
+
+Full docs in [docs/](docs/). Start with [getting-started.md](docs/getting-started.md), then
+[tools.md](docs/tools.md) for the two tools, their parameters, the report format and the
+policy in detail, and [troubleshooting.md](docs/troubleshooting.md) when a call comes back
+with an error.
 
 ## 📜 Licence
 

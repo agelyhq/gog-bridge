@@ -33,10 +33,14 @@ Three layers, dependencies pointing inward only.
 which account gog acts as, where it reads its configuration, or which commands it has. The
 rules, all covered by `tests/test_policy.py` with a tripwire wrapper proving nothing spawned:
 
-- First argument in `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, plus `login`,
+- The command in `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, plus `login`,
   `logout` and `status`, which are top-level aliases of `auth add`, `auth remove` and
   `auth status` in gog v0.40.0. The aliases were found on 2026-09-16 by reading `gog --help`
-  on the real binary; the original list did not have them.
+  on the real binary; the original list did not have them. The command is what
+  `leading_command` returns: the first argument that does not start with a dash, skipping the
+  value after `--color` or `--select` (`VALUE_TAKING_GLOBAL_FLAGS`, the only value-taking
+  global flags v0.40.0 lets through). Checking `args[0]` alone was a hole measured live on
+  2026-09-16: `--json auth list` reached gog and returned its account list.
 - Any argument starting with `--home`, `--client`, `--access-token`, `--quota-project`,
   `--account`, `--enable-commands`, `--disable-commands`. Prefix match on the whole
   argument, so `=value` forms and `--enable-commands-exact` fall under it.
@@ -92,8 +96,10 @@ Every test drives the real MCP surface with `fastmcp.Client(server)`, and the re
 gog process, played by `tests/fake_gog.py` behind a wrapper that `conftest.write_wrapper`
 builds per platform (`.cmd` on Windows invoking `sys.executable`, a `#!/bin/sh` `exec` script
 elsewhere). The fake echoes argv, stdin and `GOG_HELP` as JSON and obeys `FAKE_GOG_EXIT`,
-`FAKE_GOG_SLEEP_MS`, `FAKE_GOG_STDOUT_BYTES`, set through `monkeypatch.setenv` because the
-runner inherits `os.environ` at spawn time. Policy tests use a second wrapper that appends
+`FAKE_GOG_SLEEP_MS`, `FAKE_GOG_STDOUT_BYTES`, `FAKE_GOG_STDERR_BYTES` and `FAKE_GOG_RAW_BYTES`
+(hex, written to both streams, for the invalid UTF-8 scenario), set through
+`monkeypatch.setenv` because the runner inherits `os.environ` at spawn time; a new knob goes
+in `conftest.FAKE_ENV_VARS` too, or it leaks between tests. Policy tests use a second wrapper that appends
 to a marker file before running the fake: no marker, no spawn. `create_server(settings,
 runner=...)` exists as a seam for embedding, the suite does not use it.
 
@@ -115,6 +121,13 @@ the shell and leaves Python holding the pipes.
 - 2026-09-16: GNU make is not guaranteed on the `windows-latest` runner image, so `ci.yml`
   spells out the lint and test recipes as `uv run` commands. Keep them identical to the
   Makefile; `release.yml` runs on Ubuntu and keeps calling make.
+- 2026-09-16: the suite has only ever run on Linux. `CREATE_NO_WINDOW`, `taskkill /T /F`, the
+  `.cmd` wrapper and the Windows CI job are unexecuted code until the repository is pushed
+  and the `windows-latest` job is green. Do not describe them as verified, and do not publish
+  the first release before that job has passed.
+- 2026-09-16: gog v0.40.0 also has a top-level `update` (self-update of the binary) and
+  `api call` (raw Google API). Neither is in `FORBIDDEN_COMMANDS`; adding `update` is a
+  product decision pending with Fabien, not an oversight.
 
 ## Publishing
 

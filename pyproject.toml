@@ -1,7 +1,7 @@
 [project]
 name = "gog-bridge"
 version = "0.1.0"
-description = "MCP server exposing the whole gog CLI (Gmail, Calendar, Drive, Docs, Sheets) to Claude Desktop through two policed tools"
+description = "MCP server exposing the whole gog CLI (Gmail, Calendar, Drive, Docs, Sheets, Slides, Contacts) to Claude Desktop through two policed tools"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "LicenseRef-FSL-1.1-MIT"
@@ -17,6 +17,7 @@ keywords = [
     "claude-desktop",
 ]
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: Microsoft :: Windows",

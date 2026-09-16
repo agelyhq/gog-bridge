@@ -18,10 +18,11 @@ surface, so a client already configured for the Go one only changes its `command
   message. The server never crashes on a failed command.
 - **`gog_help(args=[])`.** Runs `gog <args...> --help` with `GOG_HELP=full`, the only mode that
   prints the global flags along with the command's own. Empty `args` gives the top-level list.
-- **The policy, checked before anything is spawned.** Refused: the first arguments `auth`,
-  `config`, `mcp`, `batch`, `schema`, `backup` and the `auth` aliases `login`, `logout`, `status`
-  (top-level aliases in gog v0.40.0, found by reading `gog --help` on the binary); any argument
-  starting with `--home`, `--client`, `--access-token`, `--quota-project`, `--account`,
+- **The policy, checked before anything is spawned.** Refused: the commands `auth`, `config`,
+  `mcp`, `batch`, `schema`, `backup` and the `auth` aliases `login`, `logout`, `status`
+  (top-level aliases in gog v0.40.0, found by reading `gog --help` on the binary), where the
+  command is the first argument that is not a global flag, so `--json auth list` and
+  `--color auto auth list` are refused like `auth list`; any argument starting with `--home`, `--client`, `--access-token`, `--quota-project`, `--account`,
   `--enable-commands`, `--disable-commands`; the short account flag in every form kong parses,
   `-a`, `-a=x`, `-ax`, `-ja`, `-jaX`; empty `args` on `gog_run`; any argument containing a
   newline. Messages are in French, for the model to relay to a French user.
@@ -31,14 +32,18 @@ surface, so a client already configured for the Go one only changes its `command
   `exit_code: -1` with a note. On Windows the kill takes the whole process tree, because a
   wrapper's surviving child would otherwise keep the pipes open and `Process.wait()` never
   returns.
-- **Windows as a first-class target.** gog is spawned with `CREATE_NO_WINDOW` so no console
-  flashes behind Claude Desktop; stdout and stderr are decoded as UTF-8 with replacement on every
-  platform; CI runs the suite on `windows-latest` as well as `ubuntu-latest`, on Python 3.12 and
-  3.13.
+- **Windows as the target.** The spawn passes `CREATE_NO_WINDOW` under `sys.platform == "win32"`
+  so no console should flash behind Claude Desktop, and the timeout path calls `taskkill /T /F`
+  there; stdout and stderr are decoded as UTF-8 with replacement on every platform, which the
+  suite checks with invalid bytes. The CI matrix includes `windows-latest` next to
+  `ubuntu-latest`, on Python 3.12 and 3.13. Before this release the suite had only been run on
+  Linux: the Windows-specific lines are code that has been read, not behaviour that has been
+  measured, and the first green `windows-latest` job is the release gate.
 - **Startup validation.** `GOG_BRIDGE_EXE`, `GOG_BRIDGE_ACCOUNT_PERSO` and
   `GOG_BRIDGE_ACCOUNT_WORK` are required, and the executable must be an absolute path to an
   existing file. A bad environment exits with status 2 and the list of what is expected on
   stderr. `gog-bridge --version` prints `gog-bridge 0.1.0`.
-- **A test suite that spawns real processes.** `tests/fake_gog.py` behind a `.cmd` wrapper on
-  Windows and a shell wrapper elsewhere, so the asyncio runner is exercised on both, with a
-  tripwire wrapper proving that a refused call never reached the executable.
+- **A test suite that spawns real processes.** `tests/fake_gog.py` behind a shell wrapper on
+  POSIX and a `.cmd` wrapper on Windows, written so the same asyncio runner runs on both, with a
+  tripwire wrapper proving that a refused call never reached the executable. Covered: both
+  capture caps with their French marker, invalid UTF-8, timeout, non-zero exit, stdin delivery.
