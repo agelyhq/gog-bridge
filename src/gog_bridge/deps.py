@@ -13,7 +13,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from gog_bridge.domain.commands import Accounts, CommandRunner
+    from gog_bridge.domain.accounts import Accounts
+    from gog_bridge.domain.commands import CommandRunner
 
 
 @dataclass(frozen=True, slots=True)

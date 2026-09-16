@@ -12,10 +12,17 @@ surface, so a client already configured for the Go one only changes its `command
 ### Added
 
 - **`gog_run(account, args, stdin=None)`.** Runs `gog --account <address> --no-input <args...>`
-  on `perso` or `work`, the two addresses fixed by the environment, and returns one text report:
-  `exit_code: N`, stdout under `--- stdout ---`, stderr under `--- stderr ---`. A non-zero exit is
-  returned as a tool error carrying the same report, so the calling model reads gog's own
-  message. The server never crashes on a failed command.
+  on the account named by its alias and returns one text report: `exit_code: N`, stdout under
+  `--- stdout ---`, stderr under `--- stderr ---`. A non-zero exit is returned as a tool error
+  carrying the same report, so the calling model reads gog's own message. The server never
+  crashes on a failed command.
+- **Accounts by alias, in one variable.** `GOG_BRIDGE_ACCOUNTS` holds `alias=email` pairs
+  separated by commas, `perso=me@gmail.com,work=me@company.com`; aliases match
+  `^[a-z][a-z0-9_-]{0,31}$` and are unique, and a value that does not parse (empty, no `=`, bad
+  alias, address without `@`, duplicate) stops the server at startup with the offending entry
+  on stderr. The `account` parameter of `gog_run` is an enum of the configured aliases, its
+  description lists each alias with its address, and with a single alias it may be left out and
+  defaults to it. An alias outside the list is refused in French, naming the valid ones.
 - **`gog_help(args=[])`.** Runs `gog <args...> --help` with `GOG_HELP=full`, the only mode that
   prints the global flags along with the command's own. Empty `args` gives the top-level list.
 - **The policy, checked before anything is spawned.** Refused: the commands `auth`, `config`,
@@ -39,11 +46,12 @@ surface, so a client already configured for the Go one only changes its `command
   there; stdout and stderr are decoded as UTF-8 with replacement on every platform, which the
   suite checks with invalid bytes. The suite passes on `ubuntu-latest` and `windows-latest`,
   on Python 3.12 and 3.13 (run 35086557317).
-- **Startup validation.** `GOG_BRIDGE_EXE`, `GOG_BRIDGE_ACCOUNT_PERSO` and
-  `GOG_BRIDGE_ACCOUNT_WORK` are required, and the executable must be an absolute path to an
-  existing file. A bad environment exits with status 2 and the list of what is expected on
-  stderr. `gog-bridge --version` prints `gog-bridge 0.1.0`.
+- **Startup validation.** `GOG_BRIDGE_EXE` and `GOG_BRIDGE_ACCOUNTS` are required, and the
+  executable must be an absolute path to an existing file. A bad environment exits with status
+  2 and the list of what is expected on stderr. `gog-bridge --version` prints `gog-bridge 0.1.0`.
 - **A test suite that spawns real processes.** `tests/fake_gog.py` behind a shell wrapper on
   POSIX and a `.cmd` wrapper on Windows, written so the same asyncio runner runs on both, with a
   tripwire wrapper proving that a refused call never reached the executable. Covered: both
-  capture caps with their French marker, invalid UTF-8, timeout, non-zero exit, stdin delivery.
+  capture caps with their French marker, invalid UTF-8, timeout, non-zero exit, stdin delivery,
+  the alias enum and its single-alias default, the unknown alias, every malformed
+  `GOG_BRIDGE_ACCOUNTS`.

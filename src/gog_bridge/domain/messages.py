@@ -16,12 +16,16 @@ REFUSED_COMMAND = (
 REFUSED_FLAG = (
     "Argument refusé par la politique du pont : « {arg} » change le compte, l'environnement "
     "ou la liste des commandes de gog. Le compte se choisit uniquement par le paramètre "
-    "account (perso ou work)."
+    "account."
 )
 
 REFUSED_SHORT_ACCOUNT = (
     "Argument refusé par la politique du pont : « {arg} » contient le drapeau court -a "
-    "(compte). Le compte se choisit uniquement par le paramètre account (perso ou work)."
+    "(compte). Le compte se choisit uniquement par le paramètre account."
+)
+
+UNKNOWN_ACCOUNT = (
+    "Compte inconnu : « {alias} » n'est pas configuré sur ce pont. Comptes disponibles : {aliases}."
 )
 
 REFUSED_EMPTY = (

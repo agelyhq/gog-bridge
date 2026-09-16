@@ -16,6 +16,8 @@ import pytest
 from fastmcp import FastMCP
 
 from gog_bridge import tools
+from gog_bridge.deps import ToolDeps
+from gog_bridge.domain.accounts import Accounts
 from gog_bridge.tools import register_all_tools
 
 if TYPE_CHECKING:
@@ -70,15 +72,23 @@ async def test_server_descriptions_name_the_policy_and_the_report_shape(client: 
     assert "GOG_HELP=full" in (listed["gog_help"].description or "")
 
 
-async def test_server_registry_rejects_a_module_without_register(tmp_path: Path) -> None:
+async def test_server_registry_rejects_a_module_without_register(
+    tmp_path: Path, fake_exe: Path
+) -> None:
     """A file dropped in the tools package must register itself or fail at startup."""
     (tmp_path / "probe_not_a_tool.py").write_text('"""A module that forgot to register."""\n')
     importlib.invalidate_caches()
     tools.__path__.append(str(tmp_path))
+    deps = ToolDeps(
+        exe=fake_exe,
+        accounts=Accounts.parse("perso=perso@example.com"),
+        runner=MagicMock(),
+        timeout_seconds=1,
+    )
 
     try:
         with pytest.raises(RuntimeError, match="has no register"):
-            register_all_tools(FastMCP(name="probe"), MagicMock())
+            register_all_tools(FastMCP(name="probe"), deps)
     finally:
         tools.__path__.remove(str(tmp_path))
         sys.modules.pop("gog_bridge.tools.probe_not_a_tool", None)

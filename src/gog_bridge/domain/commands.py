@@ -8,13 +8,13 @@ so the tools depend on nothing that spawns processes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from pathlib import Path
 
-Account = Literal["perso", "work"]
+    from gog_bridge.domain.accounts import Accounts
 
 NO_INPUT_FLAG = "--no-input"
 ACCOUNT_FLAG = "--account"
@@ -33,18 +33,6 @@ STDERR_LIMIT = 20_000
 # Reported when the process was killed on timeout, so it never collides with
 # a real gog exit status, which is 0 or positive.
 TIMEOUT_EXIT_CODE = -1
-
-
-@dataclass(frozen=True, slots=True)
-class Accounts:
-    """The two Google accounts the bridge may act on, keyed by the tool's alias."""
-
-    perso: str
-    work: str
-
-    def email_for(self, account: Account) -> str:
-        """Return the address gog receives for a tool alias."""
-        return self.perso if account == "perso" else self.work
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,10 +65,13 @@ class CommandRunner(Protocol):
 
 
 def build_run_request(
-    exe: Path, accounts: Accounts, account: Account, args: Sequence[str], stdin: str | None
+    exe: Path, accounts: Accounts, alias: str, args: Sequence[str], stdin: str | None
 ) -> CommandRequest:
-    """Assemble `gog --account <email> --no-input <args...>` for the chosen account."""
-    argv = (str(exe), ACCOUNT_FLAG, accounts.email_for(account), NO_INPUT_FLAG, *args)
+    """Assemble `gog --account <email> --no-input <args...>` for the chosen alias.
+
+    Raises UnknownAccountError, in French, when the alias is not configured.
+    """
+    argv = (str(exe), ACCOUNT_FLAG, accounts.email_for(alias), NO_INPUT_FLAG, *args)
     return CommandRequest(argv=argv, stdin=stdin)
 
 

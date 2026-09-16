@@ -3,8 +3,8 @@
 ## Purpose
 
 MCP server that lets Claude Desktop drive the whole gog CLI (Google Workspace from the
-command line) on two fixed accounts, through two tools: `gog_run` executes a command,
-`gog_help` prints its full help. The bundled `gog mcp` exposes 8 read-only tools (10 with
+command line) on the accounts the operator lists, through two tools: `gog_run` executes a
+command, `gog_help` prints its full help. The bundled `gog mcp` exposes 8 read-only tools (10 with
 `--allow-write`, measured on v0.40.0) and cannot send mail; this bridge exposes every command
 and enforces a policy instead of an allowlist. Windows is the target platform; Linux and
 macOS work the same and are where development happens.
@@ -13,11 +13,13 @@ macOS work the same and are where development happens.
 
 Three layers, dependencies pointing inward only.
 
-- **Domain** (`domain/`): `policy.py` is the security boundary, see below; `commands.py`
-  holds `Accounts`, `CommandRequest`, `CommandOutcome`, the `CommandRunner` protocol, the
-  capture caps and the two argv builders; `rendering.py` turns an outcome into the text
-  report; `messages.py` holds every French sentence the model reads; `errors.py` the
-  exception hierarchy. Imports neither `fastmcp` nor `subprocess`.
+- **Domain** (`domain/`): `policy.py` is the security boundary, see below; `accounts.py`
+  holds `Accounts`, the alias to address map parsed from `GOG_BRIDGE_ACCOUNTS`, with
+  `email_for` raising the French `UnknownAccountError`; `commands.py` holds
+  `CommandRequest`, `CommandOutcome`, the `CommandRunner` protocol, the capture caps and the
+  two argv builders; `rendering.py` turns an outcome into the text report; `messages.py`
+  holds every French sentence the model reads; `errors.py` the exception hierarchy. Imports
+  neither `fastmcp` nor `subprocess`.
 - **Adapters** (`adapters/process_runner.py`): `AsyncioProcessRunner`, the only module that
   spawns processes. asyncio subprocess, bounded stream capture, timeout with kill.
 - **Tools** (`tools/`): one file per MCP tool, plus `_errors.py` (domain error to
@@ -51,9 +53,32 @@ rules, all covered by `tests/test_policy.py` with a tripwire wrapper proving not
   letters refuses. `-n5a` passes because `5` ends the scan.
 - Empty `args` on `gog_run` only. Any argument containing `\n` or `\r`.
 
-Refusal messages, the timeout note, the truncation marker and the spawn failure are the
-only French strings in the code base, all in `domain/messages.py`. Everything else, tool
-descriptions included, is English.
+Refusal messages, the unknown account, the timeout note, the truncation marker and the
+spawn failure are the only French strings in the code base, all in `domain/messages.py`.
+Everything else, tool descriptions included, is English.
+
+## Accounts and the `account` parameter
+
+One variable, `GOG_BRIDGE_ACCOUNTS`, holds `alias=email` pairs separated by commas
+(`perso=me@gmail.com,work=me@company.com`). `Accounts.parse` refuses an empty list, an entry
+without `=`, an alias outside `^[a-z][a-z0-9_-]{0,31}$`, an address without `@` and a
+duplicate alias; the refusal reaches stderr through `SettingsLoadError` and the process
+exits 2. The former `GOG_BRIDGE_ACCOUNT_PERSO` and `GOG_BRIDGE_ACCOUNT_WORK` are gone, with
+no compatibility path.
+
+`tools/gog_run.py` shapes the `account` parameter at registration from the parsed aliases:
+the JSON schema carries `enum: [aliases]` and a description listing each alias with its
+address; with exactly one alias the parameter gets that alias as default and leaves
+`required`, otherwise it is required. The Python type stays `str`, on purpose: an alias
+outside the enum reaches the tool and is refused there in French, naming the valid ones,
+instead of dying in pydantic's English validation error. FastMCP builds the schema from the
+function's annotations and `inspect.signature`, and `mcp.tool` takes no schema of its own,
+so that module does not defer its annotations: the `Annotated[str, Field(...)]` built for
+the aliases is a closure variable evaluated at `def` time, and the default is written into
+`__kwdefaults__` (the parameters are keyword-only so `account` can have a default while
+`args` has none). A deferred annotation would be an unresolvable string, and on Python 3.14
+an assignment to `__annotations__` after the `def` is lost because `functools.wraps` copies
+`__annotate__` instead. Measured on 2026-09-16 on 3.12 and 3.14.
 
 ## Key conventions
 
@@ -79,6 +104,9 @@ descriptions included, is English.
 - **No `.env` file.** `Settings` reads the process environment only; Claude Desktop's
   working directory is not a place to pick up a file from. `GOG_BRIDGE_EXE` is validated as
   an absolute existing file at startup, so tests must give `Settings` a real file.
+  `GOG_BRIDGE_ACCOUNTS` is annotated `NoDecode` (pydantic-settings 2.7) so the raw string
+  reaches `Accounts.parse` instead of the JSON decoding pydantic-settings applies to
+  non-scalar fields.
 
 ## Commands
 
@@ -120,6 +148,9 @@ the shell and leaves Python holding the pipes.
 - 2026-09-16: mypy requires literal `alias=` strings on pydantic fields, so the env names
   are spelled twice, once in `Field(alias=...)` and once in the `ENV_*` constants used by
   the startup message.
+- 2026-09-16: a stdlib dataclass used as a pydantic field must annotate with builtins
+  (`dict[str, str]`), not `Mapping` imported under `TYPE_CHECKING`, or pydantic raises
+  "not fully defined" at the first `Settings()`.
 - 2026-09-16: GNU make is not guaranteed on the `windows-latest` runner image, so `ci.yml`
   spells out the lint and test recipes as `uv run` commands. Keep them identical to the
   Makefile; `release.yml` runs on Ubuntu and keeps calling make.

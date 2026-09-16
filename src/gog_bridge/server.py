@@ -20,10 +20,11 @@ DISTRIBUTION = "gog-bridge"
 
 INSTRUCTIONS = """\
 Bridge to the gog command line tool for Google Workspace: Gmail, Calendar,
-Drive, Docs, Sheets, Slides, Contacts and more, on two accounts.
+Drive, Docs, Sheets, Slides, Contacts and more, on the configured accounts:
+{accounts}.
 
-Two tools. gog_run executes one gog command on the account you name, perso or
-work, and returns exit code, stdout and stderr. gog_help prints the full help
+Two tools. gog_run executes one gog command on the account you name by its
+alias and returns exit code, stdout and stderr. gog_help prints the full help
 of any command, flags included; call it first when unsure of a flag.
 
 Pass the command line as a list of argv entries, without the leading 'gog'.
@@ -54,7 +55,7 @@ def create_server(
 
     mcp = FastMCP(
         name=DISTRIBUTION,
-        instructions=INSTRUCTIONS,
+        instructions=INSTRUCTIONS.format(accounts=settings.accounts.describe()),
         # Without an explicit version, a client is told the FastMCP version instead.
         version=version(DISTRIBUTION),
     )

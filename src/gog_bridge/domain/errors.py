@@ -16,6 +16,10 @@ class PolicyError(GogBridgeError):
     """The arguments break a rule this server enforces before spawning gog."""
 
 
+class UnknownAccountError(GogBridgeError):
+    """The account alias is not one the operator configured."""
+
+
 class CommandSpawnError(GogBridgeError):
     """The gog executable could not be started at all."""
 

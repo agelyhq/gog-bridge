@@ -28,6 +28,8 @@ if TYPE_CHECKING:
 
 PERSO = "perso@example.com"
 WORK = "work@example.com"
+# What an operator writes in GOG_BRIDGE_ACCOUNTS for the default two-alias suite.
+ACCOUNTS_SPEC = f"perso={PERSO},work={WORK}"
 
 FAKE_GOG = Path(__file__).with_name("fake_gog.py")
 FAKE_ENV_VARS = (
@@ -90,9 +92,7 @@ def make_settings(fake_exe: Path, **overrides: Any) -> Settings:
     """
     return Settings(
         gog_bridge_exe=str(fake_exe),
-        gog_bridge_account_perso=PERSO,
-        gog_bridge_account_work=WORK,
-        **overrides,
+        **{"gog_bridge_accounts": ACCOUNTS_SPEC, **overrides},
     )  # type: ignore[call-arg]
 
 

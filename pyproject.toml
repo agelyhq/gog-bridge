@@ -34,9 +34,9 @@ dependencies = [
     # The 4.0 line drops the 3.x compatibility shims, so it stays out until it is stable.
     "fastmcp>=3.4.7,<4",
     "pydantic>=2.11",
-    # 2.6 is the first line whose alias handling matches populate_by_name on
-    # BaseSettings, which the tests rely on to build Settings in code.
-    "pydantic-settings>=2.6",
+    # 2.7 brings NoDecode, which keeps the accounts variable out of the JSON
+    # decoding pydantic-settings applies to non-scalar fields.
+    "pydantic-settings>=2.7",
 ]
 
 [project.scripts]
@@ -81,12 +81,6 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TC", "RUF"]
 # Pydantic reads the field annotations of Settings at runtime, so their imports
 # must stay out of the type-checking block.
 runtime-evaluated-base-classes = ["pydantic_settings.BaseSettings"]
-
-[tool.ruff.lint.per-file-ignores]
-# Pydantic and FastMCP read these annotations at runtime to build the tool
-# schemas, so moving the imports into a type-checking block breaks the server.
-"src/gog_bridge/tools/gog_run.py" = ["TC001"]
-"src/gog_bridge/tools/gog_help.py" = ["TC001"]
 
 [tool.mypy]
 python_version = "3.12"

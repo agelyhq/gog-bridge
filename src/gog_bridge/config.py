@@ -9,17 +9,17 @@ GOG_BRIDGE_.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Annotated, Any
 
 from pydantic import Field, ValidationError, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
-from gog_bridge.domain.commands import Accounts
+from gog_bridge.domain.accounts import EXAMPLE, Accounts, AccountsParseError
 
 DEFAULT_TIMEOUT_SECONDS = 120.0
 
 ENV_EXE = "GOG_BRIDGE_EXE"
-ENV_ACCOUNT_PERSO = "GOG_BRIDGE_ACCOUNT_PERSO"
-ENV_ACCOUNT_WORK = "GOG_BRIDGE_ACCOUNT_WORK"
+ENV_ACCOUNTS = "GOG_BRIDGE_ACCOUNTS"
 ENV_TIMEOUT_SECONDS = "GOG_BRIDGE_TIMEOUT_SECONDS"
 
 
@@ -36,8 +36,9 @@ class Settings(BaseSettings):
     )
 
     exe: Path = Field(alias="gog_bridge_exe")
-    account_perso: str = Field(alias="gog_bridge_account_perso", min_length=1)
-    account_work: str = Field(alias="gog_bridge_account_work", min_length=1)
+    # NoDecode keeps pydantic-settings from running json.loads on the value
+    # before the validator sees it, which it does for any non-scalar field.
+    accounts: Annotated[Accounts, NoDecode] = Field(alias="gog_bridge_accounts")
     timeout_seconds: float = Field(
         default=DEFAULT_TIMEOUT_SECONDS, alias="gog_bridge_timeout_seconds", gt=0
     )
@@ -53,10 +54,15 @@ class Settings(BaseSettings):
             raise ValueError(f"no file at {value}")
         return value
 
-    @property
-    def accounts(self) -> Accounts:
-        """The two addresses gog receives, keyed by the tool alias."""
-        return Accounts(perso=self.account_perso, work=self.account_work)
+    @field_validator("accounts", mode="before")
+    @classmethod
+    def _accounts_from_alias_email_pairs(cls, value: Any) -> Any:
+        if not isinstance(value, str):
+            return value
+        try:
+            return Accounts.parse(value)
+        except AccountsParseError as exc:
+            raise ValueError(str(exc)) from exc
 
 
 class SettingsLoadError(Exception):
@@ -77,8 +83,8 @@ def _describe(exc: ValidationError) -> str:
         variable = str(error["loc"][0]).upper() if error["loc"] else "environment"
         lines.append(f"  {variable}: {error['msg']}")
     lines.append(
-        f"Required: {ENV_EXE} (absolute path of gog.exe), {ENV_ACCOUNT_PERSO}, "
-        f"{ENV_ACCOUNT_WORK}. Optional: {ENV_TIMEOUT_SECONDS} (default "
-        f"{DEFAULT_TIMEOUT_SECONDS:g})."
+        f"Required: {ENV_EXE} (absolute path of gog.exe), {ENV_ACCOUNTS} (alias=email pairs "
+        f"separated by commas, for example {EXAMPLE}). Optional: {ENV_TIMEOUT_SECONDS} "
+        f"(default {DEFAULT_TIMEOUT_SECONDS:g})."
     )
     return "\n".join(lines)
