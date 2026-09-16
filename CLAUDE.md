@@ -123,14 +123,9 @@ the shell and leaves Python holding the pipes.
 - 2026-09-16: GNU make is not guaranteed on the `windows-latest` runner image, so `ci.yml`
   spells out the lint and test recipes as `uv run` commands. Keep them identical to the
   Makefile; `release.yml` runs on Ubuntu and keeps calling make.
-- 2026-09-16: the suite has only ever run on Linux. `CREATE_NO_WINDOW`, `taskkill /T /F`, the
-  `.cmd` wrapper and the Windows CI job are unexecuted code until the repository is pushed
-  and the `windows-latest` job is green. Do not describe them as verified, and do not publish
-  the first release before that job has passed.
-- 2026-09-16: the first `windows-latest` run failed 6 tests, all in the fake and none in the
-  bridge: text-mode `sys.stderr` writes `\r\n`, and `sys.stdin.read()` decodes with cp1252.
-  `fake_gog.py` now uses the `.buffer` streams with explicit `b"\n"` on every OS. Any new
-  output in the fake goes through the binary buffers too.
+- 2026-09-16: first Windows run went red because `tests/fake_gog.py` used text-mode streams
+  (CRLF, cp1252); the fake now uses binary streams and the `windows-latest` jobs are green
+  (run 35086557317). Keep the fake byte-exact.
 
 ## Publishing
 

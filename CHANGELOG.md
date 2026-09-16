@@ -37,10 +37,8 @@ surface, so a client already configured for the Go one only changes its `command
 - **Windows as the target.** The spawn passes `CREATE_NO_WINDOW` under `sys.platform == "win32"`
   so no console should flash behind Claude Desktop, and the timeout path calls `taskkill /T /F`
   there; stdout and stderr are decoded as UTF-8 with replacement on every platform, which the
-  suite checks with invalid bytes. The CI matrix includes `windows-latest` next to
-  `ubuntu-latest`, on Python 3.12 and 3.13. Before this release the suite had only been run on
-  Linux: the Windows-specific lines are code that has been read, not behaviour that has been
-  measured, and the first green `windows-latest` job is the release gate.
+  suite checks with invalid bytes. The suite passes on `ubuntu-latest` and `windows-latest`,
+  on Python 3.12 and 3.13 (run 35086557317).
 - **Startup validation.** `GOG_BRIDGE_EXE`, `GOG_BRIDGE_ACCOUNT_PERSO` and
   `GOG_BRIDGE_ACCOUNT_WORK` are required, and the executable must be an absolute path to an
   existing file. A bad environment exits with status 2 and the list of what is expected on

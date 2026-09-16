@@ -150,8 +150,8 @@ make build     # uv build
 ```
 
 The tests spawn `tests/fake_gog.py` through a platform wrapper, a `.cmd` on Windows and a
-shell script elsewhere, so the same asyncio runner is under test on both. The CI matrix covers
-Ubuntu and Windows, Python 3.12 and 3.13; a release waits for the Windows job to be green.
+shell script elsewhere, so the same asyncio runner is under test on both. The suite passes on
+`ubuntu-latest` and `windows-latest`, Python 3.12 and 3.13.
 
 ## 📚 Documentation
 
