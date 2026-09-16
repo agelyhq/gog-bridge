@@ -1,0 +1,95 @@
+[project]
+name = "gog-bridge"
+version = "0.1.0"
+description = "MCP server exposing the whole gog CLI (Gmail, Calendar, Drive, Docs, Sheets) to Claude Desktop through two policed tools"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "LicenseRef-FSL-1.1-MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Fabien Vauchelles" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "gog",
+    "gogcli",
+    "google-workspace",
+    "gmail",
+    "claude-desktop",
+]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Email",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    # 3.4.1 and later floor Starlette at 1.0.1, which closes CVE-2026-48710.
+    # The 4.0 line drops the 3.x compatibility shims, so it stays out until it is stable.
+    "fastmcp>=3.4.7,<4",
+    "pydantic>=2.11",
+    # 2.6 is the first line whose alias handling matches populate_by_name on
+    # BaseSettings, which the tests rely on to build Settings in code.
+    "pydantic-settings>=2.6",
+]
+
+[project.scripts]
+gog-bridge = "gog_bridge.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/agelyhq/gog-bridge"
+Repository = "https://github.com/agelyhq/gog-bridge"
+Issues = "https://github.com/agelyhq/gog-bridge/issues"
+Changelog = "https://github.com/agelyhq/gog-bridge/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gog_bridge"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "TC", "RUF"]
+
+[tool.ruff.lint.flake8-type-checking]
+# Pydantic reads the field annotations of Settings at runtime, so their imports
+# must stay out of the type-checking block.
+runtime-evaluated-base-classes = ["pydantic_settings.BaseSettings"]
+
+[tool.ruff.lint.per-file-ignores]
+# Pydantic and FastMCP read these annotations at runtime to build the tool
+# schemas, so moving the imports into a type-checking block breaks the server.
+"src/gog_bridge/tools/gog_run.py" = ["TC001"]
+"src/gog_bridge/tools/gog_help.py" = ["TC001"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
