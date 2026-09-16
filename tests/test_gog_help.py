@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from conftest import echoed, parse_report, report_text
+from conftest import echoed
+from reports import parse_report, report_text
 
 if TYPE_CHECKING:
     from fastmcp import Client

@@ -10,7 +10,8 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from conftest import PERSO, WORK, echoed, make_client, parse_report, report_text
+from conftest import PERSO, WORK, echoed, make_client
+from reports import parse_report, report_text
 
 from gog_bridge.domain.commands import STDERR_LIMIT, STDOUT_LIMIT
 

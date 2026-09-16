@@ -9,7 +9,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from conftest import make_client, report_text, write_wrapper
+from conftest import make_client, write_wrapper
+from reports import report_text
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator

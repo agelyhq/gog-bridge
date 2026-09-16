@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from fastmcp import Client, FastMCP
+from reports import parse_report
 
 from gog_bridge.config import Settings
 from gog_bridge.server import create_server
@@ -113,24 +114,6 @@ def server(settings: Settings) -> FastMCP:
 @pytest.fixture
 def client(server: FastMCP) -> Client:
     return Client(server)
-
-
-def report_text(result: Any) -> str:
-    """The text block a tool call returned, on success or on error."""
-    return result.content[0].text
-
-
-def parse_report(text: str) -> dict[str, Any]:
-    """Split a report into its exit code, stdout and stderr sections."""
-    head, _, rest = text.partition("--- stdout ---\n")
-    stdout, _, stderr = rest.partition("--- stderr ---\n")
-    exit_line = head.splitlines()[0]
-    return {
-        "exit_code": int(exit_line.removeprefix("exit_code: ")),
-        "note": next((line for line in head.splitlines() if line.startswith("note: ")), None),
-        "stdout": stdout.removesuffix("\n"),
-        "stderr": stderr,
-    }
 
 
 def echoed(text: str) -> dict[str, Any]:
