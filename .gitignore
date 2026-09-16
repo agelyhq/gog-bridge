@@ -8,3 +8,6 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# The gog release binary that scripts/fetch_gog.py downloads for the e2e tier.
+.cache/

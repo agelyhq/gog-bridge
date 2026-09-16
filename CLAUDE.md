@@ -112,9 +112,10 @@ an assignment to `__annotations__` after the `def` is lost because `functools.wr
 
 ```bash
 make install   # uv sync --all-extras
-make check     # lint + test, what CI runs
-make lint      # ruff check, ruff format --check, mypy
-make test      # pytest, real subprocesses, no network
+make check     # lint + test, what the CI check job runs
+make lint      # ruff check, ruff format --check, mypy, on src tests scripts
+make test      # pytest, real subprocesses, no network; the e2e directory skips
+make e2e       # fetch gog v0.40.0 into .cache/gog/ (SHA256-checked), then pytest -m e2e
 make run       # start the server on stdio
 make build     # uv build
 ```
@@ -134,8 +135,36 @@ to a marker file before running the fake: no marker, no spawn. `create_server(se
 runner=...)` exists as a seam for embedding, the suite does not use it.
 
 `test_main.py` runs `python -m gog_bridge` as a subprocess for `--version` and the bad
-environment cases. On the shell wrapper, `exec` matters: without it the kill on timeout hits
-the shell and leaves Python holding the pipes.
+environment cases, the malformed `GOG_BRIDGE_ACCOUNTS` values included. On the shell
+wrapper, `exec` matters: without it the kill on timeout hits the shell and leaves Python
+holding the pipes. `tests/reports.py` holds `report_text` and `parse_report`, shared with
+the e2e tier; `tests/conftest.py` keeps the fixtures and `echoed`.
+
+### The end-to-end tier
+
+`tests/e2e/` starts the installed console script `gog-bridge` as a real subprocess over
+stdio, the way Claude Desktop starts it, through `fastmcp.client.transports.StdioTransport`,
+against the real gog v0.40.0 binary named by `GOG_BRIDGE_E2E_GOG`. Without that variable, or
+if it names no file, every test in the directory is skipped with the reason; the marker
+`e2e` is added by the directory's `pytest_collection_modifyitems`, so `pytest -m e2e`
+selects the tier and a plain `pytest` runs it too when the variable is set.
+`scripts/fetch_gog.py` (stdlib only, `--cache-dir` to relocate `.cache/gog/`) downloads the
+asset for the current platform plus `checksums.txt`, verifies the SHA256, extracts the
+binary and prints its path; a mismatch deletes the archive and exits 1.
+
+The bridge process gets `GOG_BRIDGE_ACCOUNTS=perso=...,work=...` on `example.invalid`
+addresses and an isolated home under `tmp_path`: `HOME` and the four `XDG_*_HOME` on POSIX,
+`USERPROFILE`, `APPDATA`, `LOCALAPPDATA` on Windows, all set on every platform. The mcp
+stdio client starts from its own short allowlist of inherited variables, so the developer's
+`GOG_*` never reach the bridge. No credential exists there, so `drive ls` and `gmail send`
+fail inside gog with exit 10 and "OAuth client credentials missing" on stderr, naming a path
+under the isolated home, which the test asserts. Every call is held under 30 s, far from
+the 120 s default timeout. The tier runs in CI as the `e2e` job on `ubuntu-latest` and
+`windows-latest` after `check`.
+
+`tests/e2e/__init__.py` exists so the directory's conftest imports as `e2e.conftest`;
+without it pytest loads both conftest modules under the bare name `conftest` and the unit
+tier's `from conftest import ...` lands in the wrong file (measured 2026-09-16).
 
 ## Gotchas, dated
 

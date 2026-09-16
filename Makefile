@@ -1,4 +1,4 @@
-.PHONY: install build check lint format test run clean
+.PHONY: install build check lint format test e2e run clean
 
 install:
 	uv sync --all-extras
@@ -11,16 +11,21 @@ build:
 check: lint test
 
 lint:
-	uv run ruff check src tests
-	uv run ruff format --check src tests
+	uv run ruff check src tests scripts
+	uv run ruff format --check src tests scripts
 	uv run mypy
 
 format:
-	uv run ruff format src tests
-	uv run ruff check --fix src tests
+	uv run ruff format src tests scripts
+	uv run ruff check --fix src tests scripts
 
 test:
 	uv run pytest
+
+# The end-to-end tier: the installed console script over stdio against the
+# real gog v0.40.0, downloaded once into .cache/gog/ and SHA256-checked.
+e2e:
+	GOG_BRIDGE_E2E_GOG=$$(uv run python scripts/fetch_gog.py) uv run pytest -m e2e -v
 
 run:
 	uv run gog-bridge

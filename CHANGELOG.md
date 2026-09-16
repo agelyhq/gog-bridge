@@ -55,3 +55,12 @@ surface, so a client already configured for the Go one only changes its `command
   capture caps with their French marker, invalid UTF-8, timeout, non-zero exit, stdin delivery,
   the alias enum and its single-alias default, the unknown alias, every malformed
   `GOG_BRIDGE_ACCOUNTS`.
+- **An end-to-end tier on the real binary.** `make e2e` downloads gog v0.40.0 for the current
+  platform from the GitHub release with `scripts/fetch_gog.py` (standard library only, SHA256
+  checked against `checksums.txt`, cached in `.cache/gog/`), then starts the installed
+  `gog-bridge` console script over stdio, as Claude Desktop does, in a home isolated under the
+  test's temporary directory on POSIX and on Windows. Eight sessions: the tool list and its
+  enum, `--version`, the full help of `gmail send`, two policy refusals, the unknown alias, and
+  `drive ls` and `gmail send` failing inside gog for lack of credentials, with the path gog
+  names under the isolated home. Runs in CI on `ubuntu-latest` and `windows-latest` after the
+  check job.
