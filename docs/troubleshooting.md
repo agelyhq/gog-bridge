@@ -5,77 +5,110 @@ says what the symptom means, what to check and in what order, and where to read 
 
 Failures from this server arrive as MCP tool errors carrying a readable message, and the message
 tells you which of three things happened: the policy refused the call before anything ran, gog
-ran and exited non-zero, or gog could not be started. The startup checks are the one exception:
-they fail before the server exists, so they show up in the client's MCP log, not in a tool
-result.
+ran and exited non-zero, or gog could not be started. The startup checks are the exception: they
+fail before the server exists, so they show in the client's MCP log, on Windows under
+`%APPDATA%\Claude\logs`, and not in a tool result.
 
-## The server does not start
+## The gog connector does not appear
 
-**What you see.** Claude Desktop lists `gog` as failed or disconnected, and its MCP log holds:
+**What you see.** Claude Desktop lists no `gog` server, or lists it as failed or disconnected,
+and no tool named `gog_run` is offered.
 
-```
-gog-bridge cannot start: invalid environment.
-  GOG_BRIDGE_EXE: Value error, no file at C:\Users\you\gog\gog.exe
-Required: GOG_BRIDGE_EXE (absolute path of gog.exe), GOG_BRIDGE_ACCOUNT_PERSO, GOG_BRIDGE_ACCOUNT_WORK. Optional: GOG_BRIDGE_TIMEOUT_SECONDS (default 120).
-```
-
-**What it means.** The `env` block of the client config does not describe a runnable bridge.
-The second line names the variable and the reason: missing, empty, a relative path, or a path
-with no file behind it. The process exits with status 2 on purpose, so the client shows the
-message instead of retrying a server that would fail on its first call.
+**What it means.** Either the client never read the entry, or it read it and the server exited
+at startup. The MCP log tells the two apart: a startup failure leaves a message there, a missing
+entry leaves nothing.
 
 **What to check, in order.**
 
-1. The three required variables are spelled exactly, in the `env` block of the `gog` entry.
-2. `GOG_BRIDGE_EXE` is absolute and points at a file. On Windows, double every backslash in
-   JSON: `C:\\Users\\you\\gog\\gog.exe`.
-3. If the log says `uvx` itself was not found, the problem is upstream of the bridge: put the
-   absolute path of `uvx.exe` in `command`. See [getting-started.md](getting-started.md).
+1. That the file is the one the client reads, `%APPDATA%\Claude\claude_desktop_config.json` on
+   Windows, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, and that
+   it is valid JSON. A trailing comma after the last entry is the usual reason the client
+   silently ignores the whole file.
+2. That the client was fully restarted after the edit. On Windows, closing the window leaves it
+   running in the tray; quit from the tray icon.
+3. The MCP log. `gog-bridge cannot start: invalid environment.` means the `env` block is wrong,
+   and the next lines name the variable and the reason: a missing `GOG_BRIDGE_EXE`, a relative
+   path, `no file at <path>`, a `GOG_BRIDGE_ACCOUNTS` that does not parse or is absent because
+   the block still sets the former `GOG_BRIDGE_ACCOUNT_PERSO` and `GOG_BRIDGE_ACCOUNT_WORK`. The
+   process exits with status 2 on purpose so the client shows the message instead of retrying.
+   [configuration.md](configuration.md) lists every way `GOG_BRIDGE_ACCOUNTS` can fail.
 
-## A refusal in French
+## uvx is not found
+
+**What you see.** The MCP log says the command could not be found, `spawn uvx ENOENT` or the
+Windows equivalent, and a terminal on the same machine runs `uvx --version` without complaint.
+
+**What it means.** Claude Desktop does not inherit a PATH that changed after it started, and the
+uv installer changed it. The terminal opened after the install sees the new PATH; the client,
+opened before, does not. Replace `"command": "uvx"` with the absolute path: `where uvx` on
+Windows prints it, typically `C:\Users\you\.local\bin\uvx.exe`, `which uvx` elsewhere, typically
+`/home/you/.local/bin/uvx`. Double the backslashes in JSON. Logging out and back in also works,
+since the PATH the client inherits is the session's and the session read it at login.
+
+## The first start looks like a failure
+
+**What you see.** The server shows as starting, or as failed, for about a minute after a fresh
+install, then works on the next restart.
+
+**What it means.** `uvx` downloads a Python and the `gog-bridge` package on its first run, and
+the client's patience is shorter than the download. Nothing is wrong; the second start reads
+from uv's cache and takes about a second ([configuration.md](configuration.md) says where that
+cache is). Run `uvx gog-bridge --version` in a terminal before the first start of the client: it
+prints `gog-bridge 0.1.0` after the download, and it also gives an antivirus or SmartScreen its
+first look at the cached Python, which is the other thing that makes a first start slow.
+
+## Commande refusée par la politique du pont
 
 **What you see.**
 
 ```
 Commande refusée par la politique du pont : « auth » relève de l'administration locale de gog
-(auth et ses alias login, logout et status, config, mcp, batch, schema, backup) et n'est pas
-accessible d'ici.
+(auth et ses alias login, logout et status, config, mcp, batch, schema, backup, update) et n'est
+pas accessible d'ici.
 ```
 
-or `Argument refusé par la politique du pont : « --account=x » ...`, or `Aucun argument
-fourni : ...`.
+or `Argument refusé par la politique du pont : « --account=x » ...`, or the same prefix with
+`-ja` and the words `drapeau court -a`, or with an argument that contains a newline, or
+`Aucun argument fourni : ...`.
 
-**What it means.** The policy stopped the call before any process was spawned. Nothing ran, and
-nothing needs undoing. The message names the argument; [tools.md](tools.md) lists the rules.
-
-**What to check, in order.**
-
-1. Whether the call was trying to pick the account through `args`. It cannot: `account` is the
-   only selector, and `--account`, `-a` and every cluster containing `a` are refused.
-2. Whether the command is one of the administrative ones. They are meant to be run by the
-   person, in a terminal, and the bridge will not run them with any flag in front.
-3. Whether an argument carries a newline. Move the text to `stdin`.
-
-## gog exited non-zero
-
-**What you see.** An error result whose text starts with `exit_code: 1` (or 2, 3, 4, 5, 6, 7,
-10) and carries stdout and stderr.
-
-**What it means.** The bridge did its job: gog ran and failed, and its own message is in the
-`--- stderr ---` block. The exit codes follow gog's own table, printed at the end of
-`gog --help`: 1 error, 2 usage, 3 empty, 4 auth, 5 not found, 6 denied, 7 rate limited,
-8 retryable, 10 config.
+**What it means.** The policy stopped the call before any process was spawned. Nothing ran,
+nothing needs undoing. The message names the argument; [policy.md](policy.md) explains the rule
+it hit and why the rule exists.
 
 **What to check, in order.**
 
-1. `exit_code: 2` with a usage message: a flag does not exist in the installed version. Call
-   `gog_help` on that command before guessing again.
-2. `exit_code: 4` or `invalid_grant` in stderr: the account's authorisation is revoked or
-   expired. Only `gog auth add` in a terminal fixes it, and the bridge refuses `auth` by design.
-3. `exit_code: 6` with `insufficientPermissions`: the account was signed in without the scope
-   the command needs. Same remedy, with the missing service granted.
-4. `refusing to ... without --force (non-interactive)` in stderr: gog wanted a confirmation
-   that `--no-input` prevents. Add `-y` once the user has agreed.
+1. Whether the call was choosing the account through `args`. It cannot: `account` is the only
+   selector, and `--account`, `-a` and every cluster containing `a` are refused. If the person
+   wants another mailbox, it is another pair in `GOG_BRIDGE_ACCOUNTS`.
+2. Whether the command is one of the administrative ones, with or without global flags in
+   front of it. They are meant to be run by the person in a terminal. `gog auth add`,
+   `gog auth list` and `gog config set` in particular never run through the bridge.
+3. Whether an argument carries a newline. Move the text to `stdin` and pass `--body-file -` or
+   the command's equivalent.
+4. Whether the alias exists, if the message is instead
+   `Compte inconnu : « pro » n'est pas configuré sur ce pont. Comptes disponibles : perso, work.`
+   The fix is to use one of the listed aliases, or to add the missing pair to
+   `GOG_BRIDGE_ACCOUNTS` and restart the client.
+
+## exit_code: 2 and "refusing to ... without --force"
+
+**What you see.** An error result ending with
+
+```
+--- stderr ---
+refusing to permanently delete drive file 1AbC... without --force (non-interactive)
+```
+
+**What it means.** gog asks for confirmation before the commands it considers destructive, and
+`--no-input`, present on every call, turns the question into a refusal with exit code 2. This is
+the bridge's only confirmation mechanism, and it is working. If the person agreed to the action,
+the model adds `-y` and calls again; if not, the refusal was the right outcome. Check first that
+the destructive form was intended at all: `drive delete` without `--permanent` moves to the trash
+and asks nothing. [policy.md](policy.md) says why `-y` is allowed through.
+
+The other `exit_code: 2` is `unknown flag --xyz` followed by `Run with --help to see available
+flags`: the flag does not exist on the installed version, and `gog_help` on that command path is
+how the model finds the one that does.
 
 ## exit_code: -1 with a note
 
@@ -90,20 +123,22 @@ note: Délai dépassé : gog a été interrompu après 120 s sans terminer. La s
 
 **What it means.** The command ran past `GOG_BRIDGE_TIMEOUT_SECONDS` and was killed. `-1` never
 collides with a real gog exit status, which is 0 or positive. The streams hold what arrived
-before the kill.
+before the kill, which for a JSON listing is a document with no closing bracket.
 
 **What to check, in order.**
 
-1. The command itself. A `drive` listing over a whole account or a `gmail search` without a
-   date window can legitimately take minutes; narrow it with `--max`, a `newer_than:` term or a
-   folder, rather than retrying the same call.
-2. The timeout, if the command really needs longer: raise `GOG_BRIDGE_TIMEOUT_SECONDS` in the
-   `env` block and restart the client.
-3. On Windows only: whether `GOG_BRIDGE_EXE` points at a `.cmd` or `.bat` wrapper rather than
-   `gog.exe`. Killing a wrapper kills `cmd.exe` and not its child, which keeps the pipes open;
-   the bridge runs `taskkill /T /F` on the tree for that reason, and waits at most five more
-   seconds before answering with what it has. Pointing at `gog.exe` directly avoids the whole
-   path.
+1. The command. A Drive listing with `--all` over a whole account, a `gmail search --all` with no
+   date term, or a `docs export` of a very long document can legitimately take minutes. Narrow
+   it with `--max`, a `newer_than:` term, a `--parent` folder or a `--tab`, rather than retrying
+   the same call.
+2. The network. gog waiting on Google looks the same as gog working; a second timeout on a small
+   command points at the line rather than at the command.
+3. The timeout itself, if the command really needs longer: raise `GOG_BRIDGE_TIMEOUT_SECONDS` in
+   the `env` block and restart the client.
+4. On Windows only, whether `GOG_BRIDGE_EXE` points at a `.cmd` or `.bat` wrapper rather than at
+   `gog.exe`. Killing a wrapper kills `cmd.exe` and not its child, which keeps the pipes open; the
+   bridge runs `taskkill /T /F` on the tree for that reason and waits at most five more seconds
+   before answering with what it has. Pointing at `gog.exe` avoids the whole path.
 
 ## A stream ends with a truncation marker
 
@@ -111,45 +146,105 @@ before the kill.
 `[... sortie tronquée à 200000 octets par le pont ...]`, or the stderr block with the same
 sentence and `20000`.
 
-**What it means.** The output exceeded the cap and was cut; the rest was read and discarded so
-gog could exit. The figure is in bytes, counted before decoding.
+**What it means.** The output exceeded the cap and was cut; the rest was read and discarded so gog
+could exit. The figure is in bytes, counted before decoding. A truncated JSON document does not
+parse, and the model should narrow the query rather than repair the text: `--max` on listings,
+`--results-only` with `--select` or `--fields` on anything JSON so that gog sends only the
+fields needed, `--page` with the previous `nextPageToken` instead of `--all`, and on a long
+document `docs cat --max-bytes` below its default of 2 000 000 bytes, ten times the cap, or a
+single `--tab`.
+
+## invalid_grant, or exit_code: 4
+
+**What you see.** `exit_code: 4` and a stderr mentioning `invalid_grant`, `token has been
+expired or revoked`, or `auth required`.
+
+**What it means.** The refresh token for that address is no longer valid. Google revokes tokens
+when the password changes, when the user removes the app from their account, when a test OAuth
+client's seven-day window runs out, and after long inactivity. gog's own retry cannot help; only
+a new sign-in can.
 
 **What to check, in order.**
 
-1. Whether JSON was requested. A truncated JSON document does not parse; the model should
-   narrow the query rather than repair the text.
-2. `--max`, `--select` or `--results-only`, all global flags gog prints under `GOG_HELP=full`,
-   which is what `gog_help` uses.
+1. `gog auth list` in a terminal, then `gog auth doctor --check`, which exchanges each stored
+   token and says which one fails.
+2. `gog auth add <address>` in that terminal, for the failing address. The bridge refuses `auth`
+   by design, so this step is never done from a conversation.
+3. If the token dies every week, the OAuth client is in testing status in the Google Cloud
+   console; publishing it is the fix, and gog's documentation covers it.
 
-## Impossible de lancer gog
+## exit_code: 6, insufficientPermissions or a 403
 
-**What you see.**
+**What you see.** `exit_code: 6` with `insufficientPermissions`, `403`, or `Request had
+insufficient authentication scopes` in stderr.
 
-```
-Impossible de lancer gog (C:\Users\you\gog\gog.exe) : Permission denied
-```
-
-**What it means.** The file existed at startup but could not be executed now: permissions, an
-antivirus quarantine, or a file replaced since the server started. The reason after the colon
-is the operating system's.
+**What it means.** The account was signed in without the scope the command needs, or with a
+read-only variant of it. A token authorised for `gmail` with `--gmail-scope readonly` reads mail
+and cannot send; one authorised without `drive` cannot list Drive at all.
 
 **What to check, in order.**
 
-1. Run the same path in a terminal with `--version`.
-2. Restart the client after replacing or updating the executable, so the startup check runs
-   again on the new file.
+1. Which service the command belongs to, and its name on gog's side: `gog auth services` in a
+   terminal lists the services gog can request and the scopes each one carries.
+2. `gog auth add <address> --services gmail,calendar,drive,...` again, in a terminal, with the
+   missing service named and the full scope mode where the command writes. The browser consent
+   screen shows the added permissions.
+3. On a Workspace account, whether the administrator restricted the OAuth client or the API.
+   The 403 then names the policy, and only the administrator can lift it.
+
+## no TTY available for keyring file backend password prompt
+
+**What you see.** Every call fails with `exit_code: 1` and
+
+```
+read OAuth client secret from keyring: read secret: get secret: read encoded file keyring item:
+no TTY available for keyring file backend password prompt; set GOG_KEYRING_PASSWORD
+```
+
+while the same command works in a terminal.
+
+**What it means.** gog is on its file keyring, the encrypted file backend, and needs a password
+to open it. In a terminal it asks; under Claude Desktop there is no terminal to ask on, so it
+fails and names the variable that would have answered. The bridge passes its environment to gog
+unchanged, so the variable has to be in the `env` block of the client config. The related case
+is a platform keyring, Windows Credential Manager or the macOS keychain, whose read fails only
+when Claude Desktop is the parent process; the error then names that backend, and the way out is
+to move gog to the file keyring, whose only failure `GOG_KEYRING_PASSWORD` fixes.
+
+**What to check, in order.**
+
+1. `gog auth status` in a terminal: the `keyring_backend` line says `file`, `keychain` or `auto`.
+2. For `file`: the value the terminal session uses, `echo $env:GOG_KEYRING_PASSWORD` in
+   PowerShell or `echo $GOG_KEYRING_PASSWORD` elsewhere, copied into the `env` block as
+   `"GOG_KEYRING_PASSWORD": "..."`. Restart the client.
+3. For a platform backend that fails only under the client: set `GOG_KEYRING_PASSWORD` in the
+   session, `gog auth keyring file`, `gog auth add` for each address again, then step 2.
+
+## A console window flashes behind Claude Desktop
+
+**What you see.** On Windows, a black window appears for a fraction of a second on some or every
+call.
+
+**What it means.** The bridge starts gog with `CREATE_NO_WINDOW`, so `gog.exe` itself should
+never show one. A flash means something in between did: a `.cmd` or `.bat` wrapper in
+`GOG_BRIDGE_EXE`, which starts `cmd.exe` and its window before gog, or a `command` that is a
+batch shim from another package manager rather than `uvx.exe`. Point `GOG_BRIDGE_EXE` at the
+`gog.exe` from the release archive and `command` at the `.exe` that `where uvx` lists.
 
 ## The answer comes from the wrong account
 
 **What you see.** Mail or events from the personal address when the work one was meant, or the
 reverse.
 
-**What it means.** Not a bridge failure: the model passed the other `account` value. The bridge
-cannot infer intent, and nothing in `args` can override the alias.
+**What it means.** Not a bridge failure: the model passed the other alias, or a single alias is
+configured and every call goes there whatever the request said. Nothing in `args` can override
+the alias, so the choice was made in the `account` parameter or in `GOG_BRIDGE_ACCOUNTS`. Name
+the account in the request when the context is ambiguous.
 
-**What to check, in order.**
+## Still stuck
 
-1. The `account` value in the call. Ask for it explicitly in the request when the context is
-   ambiguous.
-2. The two addresses in the `env` block, if both aliases return the same mailbox: they may be
-   the same string.
+The report carries gog's own message wherever there is one, so the `--- stderr ---` block is
+worth reading in full before assuming the problem is in the bridge. If a failure looks like a
+genuine bug here rather than a refusal from gog or from Google, open an issue at
+[github.com/agelyhq/gog-bridge/issues](https://github.com/agelyhq/gog-bridge/issues) with the
+tool name, the `args` array and the exact report.
