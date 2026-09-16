@@ -19,10 +19,12 @@ surface, so a client already configured for the Go one only changes its `command
 - **`gog_help(args=[])`.** Runs `gog <args...> --help` with `GOG_HELP=full`, the only mode that
   prints the global flags along with the command's own. Empty `args` gives the top-level list.
 - **The policy, checked before anything is spawned.** Refused: the commands `auth`, `config`,
-  `mcp`, `batch`, `schema`, `backup` and the `auth` aliases `login`, `logout`, `status`
+  `mcp`, `batch`, `schema`, `backup`, `update` (self-update of the gog binary, which replaces
+  the executable the bridge points at) and the `auth` aliases `login`, `logout`, `status`
   (top-level aliases in gog v0.40.0, found by reading `gog --help` on the binary), where the
   command is the first argument that is not a global flag, so `--json auth list` and
-  `--color auto auth list` are refused like `auth list`; any argument starting with `--home`, `--client`, `--access-token`, `--quota-project`, `--account`,
+  `--color auto auth list` are refused like `auth list`, while `calendar update` passes
+  because `update` is a subcommand there; any argument starting with `--home`, `--client`, `--access-token`, `--quota-project`, `--account`,
   `--enable-commands`, `--disable-commands`; the short account flag in every form kong parses,
   `-a`, `-a=x`, `-ax`, `-ja`, `-jaX`; empty `args` on `gog_run`; any argument containing a
   newline. Messages are in French, for the model to relay to a French user.

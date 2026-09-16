@@ -113,7 +113,7 @@ Checked before any process is spawned. The messages are in French, for the model
 
 | Refused | Why |
 |---|---|
-| The command `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, or the `auth` aliases `login`, `logout`, `status` | Administration of the local gog installation, not Workspace operations. The command is the first argument that is not a global flag, so `--json auth list` and `--color auto auth list` are refused too. |
+| The command `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, `update`, or the `auth` aliases `login`, `logout`, `status` | Administration of the local gog installation, not Workspace operations; `update` replaces the very binary the bridge points at. The command is the first argument that is not a global flag, so `--json auth list` and `--color auto auth list` are refused too, while `calendar update` passes because `update` is a subcommand there. |
 | Any argument starting with `--account`, `--home`, `--client`, `--access-token`, `--quota-project`, `--enable-commands`, `--disable-commands` | Each one changes who gog acts as, where it reads its configuration, or which commands exist. Prefix match, so `--account=x` and `--enable-commands-exact` are covered. |
 | The short account flag in every form kong parses: `-a`, `-a=x`, `-ax`, and clusters such as `-ja` or `-jaX` | Same as `--account`. A single dash followed by letters with an `a` among them is refused; `-n5a` is a value and passes. |
 | Empty `args` on `gog_run` | Nothing to run. `gog_help` accepts it and prints the top-level help. |

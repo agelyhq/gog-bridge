@@ -10,7 +10,7 @@ from __future__ import annotations
 REFUSED_COMMAND = (
     "Commande refusée par la politique du pont : « {command} » relève de l'administration "
     "locale de gog (auth et ses alias login, logout et status, config, mcp, batch, schema, "
-    "backup) et n'est pas accessible d'ici."
+    "backup, update) et n'est pas accessible d'ici."
 )
 
 REFUSED_FLAG = (

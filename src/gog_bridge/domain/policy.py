@@ -17,12 +17,13 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 # Commands that manage the local gog installation: credentials, configuration,
-# the bundled MCP server, batch files, schemas and backups. None of them is a
-# Google Workspace operation, and each is a way around the bridge. login, logout
-# and status are top-level aliases of auth add, auth remove and auth status
-# (gog v0.40.0), so they are refused with it.
+# the bundled MCP server, batch files, schemas, backups and the self-update of
+# the binary. None of them is a Google Workspace operation, and each is a way
+# around the bridge. login, logout and status are top-level aliases of auth add,
+# auth remove and auth status (gog v0.40.0), so they are refused with it. update
+# replaces the executable the bridge points at, which only the installer may do.
 FORBIDDEN_COMMANDS = frozenset(
-    {"auth", "login", "logout", "status", "config", "mcp", "batch", "schema", "backup"}
+    {"auth", "login", "logout", "status", "config", "mcp", "batch", "schema", "backup", "update"}
 )
 
 # Global flags kong accepts before the command that take their value as the

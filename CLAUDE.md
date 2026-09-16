@@ -33,10 +33,12 @@ Three layers, dependencies pointing inward only.
 which account gog acts as, where it reads its configuration, or which commands it has. The
 rules, all covered by `tests/test_policy.py` with a tripwire wrapper proving nothing spawned:
 
-- The command in `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, plus `login`,
-  `logout` and `status`, which are top-level aliases of `auth add`, `auth remove` and
+- The command in `auth`, `config`, `mcp`, `batch`, `schema`, `backup`, `update`, plus
+  `login`, `logout` and `status`, which are top-level aliases of `auth add`, `auth remove` and
   `auth status` in gog v0.40.0. The aliases were found on 2026-09-16 by reading `gog --help`
-  on the real binary; the original list did not have them. The command is what
+  on the real binary; the original list did not have them. `update` (self-update of the
+  binary) was added the same day by decision of Fabien: it replaces the executable the bridge
+  points at, which is the installer's job. `api call` stays allowed. The command is what
   `leading_command` returns: the first argument that does not start with a dash, skipping the
   value after `--color` or `--select` (`VALUE_TAKING_GLOBAL_FLAGS`, the only value-taking
   global flags v0.40.0 lets through). Checking `args[0]` alone was a hole measured live on
@@ -125,9 +127,6 @@ the shell and leaves Python holding the pipes.
   `.cmd` wrapper and the Windows CI job are unexecuted code until the repository is pushed
   and the `windows-latest` job is green. Do not describe them as verified, and do not publish
   the first release before that job has passed.
-- 2026-09-16: gog v0.40.0 also has a top-level `update` (self-update of the binary) and
-  `api call` (raw Google API). Neither is in `FORBIDDEN_COMMANDS`; adding `update` is a
-  product decision pending with Fabien, not an oversight.
 - 2026-09-16: the first `windows-latest` run failed 6 tests, all in the fake and none in the
   bridge: text-mode `sys.stderr` writes `\r\n`, and `sys.stdin.read()` decodes with cp1252.
   `fake_gog.py` now uses the `.buffer` streams with explicit `b"\n"` on every OS. Any new

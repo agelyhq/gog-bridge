@@ -71,12 +71,15 @@ Checked on `args` before anything is spawned, for both tools. Each refusal is a 
 whose message is in French and names the offending argument.
 
 **The command.** The first argument that is not a global flag may not be `auth`, `config`,
-`mcp`, `batch`, `schema`, `backup`, nor `login`, `logout` or `status`, which gog v0.40.0 exposes
-as top-level aliases of `auth add`, `auth remove` and `auth status`. "Not a global flag" means:
-arguments starting with a dash are skipped, and so is the value after `--color` or `--select`
-in their two-argument form, the only value-taking global flags the policy lets through. So
-`auth list`, `--json auth list`, `-j config get` and `--color auto auth list` are all refused,
-while `drive ls --parent auth` passes because `auth` is a value there.
+`mcp`, `batch`, `schema`, `backup`, `update`, nor `login`, `logout` or `status`, which gog
+v0.40.0 exposes as top-level aliases of `auth add`, `auth remove` and `auth status`. `update` is
+the self-update of the gog binary: it replaces the executable `GOG_BRIDGE_EXE` points at, which
+is the installer's job. "Not a global flag" means: arguments starting with a dash are skipped,
+and so is the value after `--color` or `--select` in their two-argument form, the only
+value-taking global flags the policy lets through. So `auth list`, `--json auth list`,
+`-j config get` and `--color auto auth list` are all refused, while `drive ls --parent auth`
+passes because `auth` is a value there, and `calendar update` or `sheets update` pass because
+`update` is a subcommand there, not the command.
 
 **Long flags.** Any argument starting with `--home`, `--client`, `--access-token`,
 `--quota-project`, `--account`, `--enable-commands` or `--disable-commands` is refused. The
@@ -96,8 +99,8 @@ help.
 
 Everything else passes, `gmail send`, `calendar create`, `drive upload`, `--force` included.
 The policy is about identity and configuration, not about what the signed-in user may do with
-their own account. Not on the list, by decision rather than oversight: `update` (self-update of
-the gog binary) and `api call` (raw Google API), both present in v0.40.0.
+their own account. Not on the list, by decision rather than oversight: `api call` (raw Google
+API on the signed-in account), present in v0.40.0.
 
 ## Messages the model reads
 
