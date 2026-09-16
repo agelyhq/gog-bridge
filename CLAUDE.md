@@ -128,6 +128,10 @@ the shell and leaves Python holding the pipes.
 - 2026-09-16: gog v0.40.0 also has a top-level `update` (self-update of the binary) and
   `api call` (raw Google API). Neither is in `FORBIDDEN_COMMANDS`; adding `update` is a
   product decision pending with Fabien, not an oversight.
+- 2026-09-16: the first `windows-latest` run failed 6 tests, all in the fake and none in the
+  bridge: text-mode `sys.stderr` writes `\r\n`, and `sys.stdin.read()` decodes with cp1252.
+  `fake_gog.py` now uses the `.buffer` streams with explicit `b"\n"` on every OS. Any new
+  output in the fake goes through the binary buffers too.
 
 ## Publishing
 

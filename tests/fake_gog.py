@@ -12,6 +12,12 @@ stdout, writes one line on stderr, then exits. The variables:
 
 It is a plain script rather than a pytest helper because the runner under test
 spawns it as a real process through a platform wrapper.
+
+Every stream goes through its binary buffer. The text-mode streams depend on
+the locale and on the platform: on Windows, `sys.stdin.read()` decodes with the
+console code page (cp1252 on the CI runner, which mangles UTF-8), and a text
+`write("\\n")` comes out as `\\r\\n`. The bridge under test sends UTF-8 and
+expects `\\n`, and the assertions are byte-exact, so the fake must be too.
 """
 
 from __future__ import annotations
@@ -21,6 +27,8 @@ import os
 import sys
 import time
 
+NEWLINE = b"\n"
+
 
 def main() -> None:
     sleep_ms = int(os.environ.get("FAKE_GOG_SLEEP_MS", "0"))
@@ -29,22 +37,22 @@ def main() -> None:
 
     payload = {
         "argv": sys.argv[1:],
-        "stdin": sys.stdin.read(),
+        "stdin": sys.stdin.buffer.read().decode("utf-8"),
         "gog_help": os.environ.get("GOG_HELP"),
     }
     raw = bytes.fromhex(os.environ.get("FAKE_GOG_RAW_BYTES", ""))
 
-    sys.stdout.write(json.dumps(payload) + "\n")
-    sys.stdout.write("x" * int(os.environ.get("FAKE_GOG_STDOUT_BYTES", "0")))
-    sys.stdout.flush()
-    sys.stdout.buffer.write(raw)
-    sys.stdout.buffer.flush()
+    stdout = sys.stdout.buffer
+    stdout.write(json.dumps(payload).encode("utf-8") + NEWLINE)
+    stdout.write(b"x" * int(os.environ.get("FAKE_GOG_STDOUT_BYTES", "0")))
+    stdout.write(raw)
+    stdout.flush()
 
-    sys.stderr.write("fake gog: done\n")
-    sys.stderr.write("e" * int(os.environ.get("FAKE_GOG_STDERR_BYTES", "0")))
-    sys.stderr.flush()
-    sys.stderr.buffer.write(raw)
-    sys.stderr.buffer.flush()
+    stderr = sys.stderr.buffer
+    stderr.write(b"fake gog: done" + NEWLINE)
+    stderr.write(b"e" * int(os.environ.get("FAKE_GOG_STDERR_BYTES", "0")))
+    stderr.write(raw)
+    stderr.flush()
     sys.exit(int(os.environ.get("FAKE_GOG_EXIT", "0")))
 
 
