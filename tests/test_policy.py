@@ -27,6 +27,10 @@ REFUSED_RUN_ARGS = [
     pytest.param(["batch", "run"], "batch", id="batch-first-arg"),
     pytest.param(["schema"], "schema", id="schema-first-arg"),
     pytest.param(["backup", "create"], "backup", id="backup-first-arg"),
+    pytest.param(["--json", "auth", "list"], "auth", id="auth-behind-long-flag"),
+    pytest.param(["-j", "config", "get"], "config", id="config-behind-short-flag"),
+    pytest.param(["--color", "auto", "auth", "list"], "auth", id="auth-behind-flag-value"),
+    pytest.param(["-j", "--select", "x", "backup", "create"], "backup", id="behind-select"),
     pytest.param(["gmail", "search", "--home=/tmp/x"], "--home=/tmp/x", id="home-flag"),
     pytest.param(["gmail", "search", "--client", "x"], "--client", id="client-flag"),
     pytest.param(["gmail", "search", "--access-token=t"], "--access-token=t", id="token-flag"),
@@ -51,6 +55,8 @@ ALLOWED_RUN_ARGS = [
     pytest.param(["gmail", "search", "-"], id="lone-dash"),
     pytest.param(["gmail", "search", "authentication"], id="word-containing-auth"),
     pytest.param(["drive", "ls", "--parent", "auth"], id="auth-not-first"),
+    pytest.param(["--json", "gmail", "search", "auth"], id="flag-then-ordinary-command"),
+    pytest.param(["--color", "never", "drive", "ls"], id="flag-value-then-ordinary-command"),
 ]
 
 

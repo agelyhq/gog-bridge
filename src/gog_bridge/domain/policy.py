@@ -25,6 +25,13 @@ FORBIDDEN_COMMANDS = frozenset(
     {"auth", "login", "logout", "status", "config", "mcp", "batch", "schema", "backup"}
 )
 
+# Global flags kong accepts before the command that take their value as the
+# next argument and are not refused below. The command lookup skips that value.
+# Read from `GOG_HELP=full gog --help` on v0.40.0: every other global flag is
+# either a boolean or on the refused list. A later gog adding a value-taking
+# global flag must be added here, or `--flag value auth ...` would slip through.
+VALUE_TAKING_GLOBAL_FLAGS = frozenset({"--color", "--select"})
+
 # Matched as prefixes on the whole argument, so --account=x, --client="" and
 # --enable-commands-exact are all covered by their shorter form.
 FORBIDDEN_FLAG_PREFIXES = (
@@ -58,14 +65,36 @@ def _validate_common(args: Sequence[str]) -> None:
         if any(char in arg for char in NEWLINE_CHARS):
             raise PolicyError(messages.REFUSED_NEWLINE.format(arg=arg))
 
-    if args and args[0] in FORBIDDEN_COMMANDS:
-        raise PolicyError(messages.REFUSED_COMMAND.format(command=args[0]))
+    command = leading_command(args)
+    if command in FORBIDDEN_COMMANDS:
+        raise PolicyError(messages.REFUSED_COMMAND.format(command=command))
 
     for arg in args:
         if arg.startswith(FORBIDDEN_FLAG_PREFIXES):
             raise PolicyError(messages.REFUSED_FLAG.format(arg=arg))
         if carries_short_account_flag(arg):
             raise PolicyError(messages.REFUSED_SHORT_ACCOUNT.format(arg=arg))
+
+
+def leading_command(args: Sequence[str]) -> str | None:
+    """The command kong will dispatch to: the first argument that is not a global flag.
+
+    kong accepts global flags before the command, so `--json auth list` runs
+    `auth list`. Every argument starting with a dash is skipped, and so is the
+    value following one of `VALUE_TAKING_GLOBAL_FLAGS` in its two-argument form
+    (`--color auto`); the `--color=auto` form is a single dashed argument.
+    Returns None when the arguments hold no command at all.
+    """
+    skip_value = False
+    for arg in args:
+        if skip_value:
+            skip_value = False
+            continue
+        if arg.startswith("-"):
+            skip_value = arg in VALUE_TAKING_GLOBAL_FLAGS
+            continue
+        return arg
+    return None
 
 
 def carries_short_account_flag(arg: str) -> bool:
