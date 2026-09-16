@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from conftest import PERSO, WORK, echoed, make_client, parse_report, report_text
 
-from gog_bridge.domain.commands import STDOUT_LIMIT
+from gog_bridge.domain.commands import STDERR_LIMIT, STDOUT_LIMIT
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -104,6 +104,41 @@ async def test_run_truncates_stdout_at_the_cap_with_a_french_marker(
     kept = stdout.removesuffix("\n" + marker)
     assert len(kept.encode("utf-8")) == STDOUT_LIMIT
     assert report["stderr"] == "fake gog: done"
+
+
+async def test_run_truncates_stderr_at_its_own_cap_with_a_french_marker(
+    client: Client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FAKE_GOG_STDERR_BYTES", "30000")
+
+    async with client:
+        result = await client.call_tool("gog_run", {"account": "perso", "args": ["drive", "ls"]})
+
+    assert not result.is_error
+    report = parse_report(report_text(result))
+    stderr = report["stderr"]
+    marker = f"[... sortie tronquée à {STDERR_LIMIT} octets par le pont ...]"
+    assert stderr.endswith(marker)
+    kept = stderr.removesuffix("\n" + marker)
+    assert kept.startswith("fake gog: done\n")
+    assert len(kept.encode("utf-8")) == STDERR_LIMIT
+    assert "tronquée" not in report["stdout"]
+
+
+async def test_run_replaces_invalid_utf8_instead_of_crashing(
+    client: Client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """gog on Windows can emit bytes that are not UTF-8; the report carries U+FFFD for them."""
+    monkeypatch.setenv("FAKE_GOG_RAW_BYTES", "fffe")
+
+    async with client:
+        result = await client.call_tool("gog_run", {"account": "perso", "args": ["drive", "ls"]})
+
+    assert not result.is_error
+    report = parse_report(report_text(result))
+    assert report["stdout"].endswith("��")
+    assert report["stderr"] == "fake gog: done\n��"
+    assert echoed(report_text(result))["argv"][-2:] == ["drive", "ls"]
 
 
 async def test_run_timeout_kills_the_process_and_reports_minus_one(

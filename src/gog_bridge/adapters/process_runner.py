@@ -75,6 +75,7 @@ class AsyncioProcessRunner:
 
     @property
     def timeout_seconds(self) -> float:
+        """Seconds a command may run before it is killed; the report's timeout note quotes it."""
         return self._timeout
 
     async def run(self, request: CommandRequest) -> CommandOutcome:

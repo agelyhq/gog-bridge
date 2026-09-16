@@ -29,7 +29,13 @@ PERSO = "perso@example.com"
 WORK = "work@example.com"
 
 FAKE_GOG = Path(__file__).with_name("fake_gog.py")
-FAKE_ENV_VARS = ("FAKE_GOG_EXIT", "FAKE_GOG_SLEEP_MS", "FAKE_GOG_STDOUT_BYTES")
+FAKE_ENV_VARS = (
+    "FAKE_GOG_EXIT",
+    "FAKE_GOG_SLEEP_MS",
+    "FAKE_GOG_STDOUT_BYTES",
+    "FAKE_GOG_STDERR_BYTES",
+    "FAKE_GOG_RAW_BYTES",
+)
 
 
 def write_wrapper(directory: Path, marker: Path | None = None) -> Path:
