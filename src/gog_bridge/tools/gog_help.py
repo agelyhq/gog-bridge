@@ -32,11 +32,12 @@ def register(mcp: FastMCP, deps: ToolDeps) -> None:
     ) -> str:
         """Show the full help of a gog command, with every flag it accepts.
 
-        Runs `gog <args...> --help` with GOG_HELP=full, which is the only mode
-        that lists the global flags as well as the command's own. Call it before
-        a gog_run whose flags you are unsure of. The same policy as gog_run
-        applies to args, except that an empty list is allowed and means the
-        top-level help.
+        Runs `gog <args...> --help` with GOG_HELP=full, so that an empty args
+        prints every command of the tree rather than the top-level groups
+        alone. A command's help lists the global flags (--json, --dry-run,
+        -y, --select) next to its own. Call it before a gog_run whose flags
+        you are unsure of. The same policy as gog_run applies to args, except
+        that an empty list is allowed and means the top-level help.
 
         Args:
             args: The command path, one argv entry per item, or empty.

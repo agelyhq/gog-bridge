@@ -20,8 +20,9 @@ NO_INPUT_FLAG = "--no-input"
 ACCOUNT_FLAG = "--account"
 HELP_FLAG = "--help"
 
-# gog prints the full flag list of a command only when GOG_HELP=full is set;
-# the default help hides the global flags the model needs to see.
+# With GOG_HELP=full, `gog --help` expands from the top-level groups into the
+# whole command tree (213 lines against 1963 on v0.40.0). A single command's
+# help is the same either way and already lists the global flags.
 HELP_ENV = {"GOG_HELP": "full"}
 
 # Capture caps, in bytes. A gog JSON listing rarely exceeds a few tens of
