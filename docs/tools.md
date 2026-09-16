@@ -45,7 +45,10 @@ Every call returns one text block, on success and on failure:
 ```
 exit_code: 0
 --- stdout ---
-{"threads": [...]}
+{
+  "nextPageToken": "",
+  "threads": [...]
+}
 --- stderr ---
 ```
 
@@ -53,7 +56,10 @@ Line by line: `exit_code: N` first; a `note: ...` line only when the process tim
 `--- stdout ---` header and the captured stdout; the `--- stderr ---` header and the captured
 stderr. Both streams are decoded as UTF-8 with replacement, on every platform, so a byte that is
 not UTF-8 shows as U+FFFD rather than failing the call. A trailing newline is stripped from each
-stream, which is why a command that printed nothing shows the two headers back to back.
+stream, which is why a command that printed nothing shows the two headers back to back. The
+stdout above is what `gmail search --json` prints on v0.40.0: an indented object whose keys
+come out in alphabetical order, `nextPageToken` (empty on the last page) before `threads`, and
+`--results-only` reduces it to the `threads` array alone.
 
 **A non-zero exit is an error result.** The same report comes back, but on the MCP error channel
 (`isError: true`), so the model sees it as a failure and reads gog's message in stderr:

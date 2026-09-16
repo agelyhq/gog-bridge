@@ -126,13 +126,17 @@ and gets back one text block:
 ```
 exit_code: 0
 --- stdout ---
-{"threads": [...]}
+{
+  "nextPageToken": "",
+  "threads": [...]
+}
 --- stderr ---
 ```
 
-That shape never changes, on success or on failure, which is why [tools.md](tools.md) is short
-on the subject. Underneath, the bridge ran
-`gog --account you@company.com --no-input gmail search newer_than:1d --json`: the address came
+The block's shape never changes, on success or on failure, which is why [tools.md](tools.md) is
+short on the subject. Between the headers sits gog's own output, here the indented object that
+`gmail search --json` prints, with `nextPageToken` empty on the last page. Underneath, the bridge
+ran `gog --account you@company.com --no-input gmail search newer_than:1d --json`: the address came
 from the alias, `--no-input` is on every call, and nothing the model wrote could have changed
 either.
 

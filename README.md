@@ -87,7 +87,10 @@ and gets back one text block:
 ```
 exit_code: 0
 --- stdout ---
-{"threads": [...]}
+{
+  "nextPageToken": "",
+  "threads": [...]
+}
 --- stderr ---
 ```
 
