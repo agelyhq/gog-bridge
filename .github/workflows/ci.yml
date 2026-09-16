@@ -38,9 +38,39 @@ jobs:
       # the Makefile.
       - name: Lint
         run: |
-          uv run ruff check src tests
-          uv run ruff format --check src tests
+          uv run ruff check src tests scripts
+          uv run ruff format --check src tests scripts
           uv run mypy
 
       - name: Test
         run: uv run pytest
+
+  e2e:
+    name: End-to-end against gog v0.40.0 (${{ matrix.os }})
+    needs: check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          cache-suffix: e2e-${{ matrix.os }}
+
+      - name: Install
+        run: uv sync --all-extras --python 3.12
+
+      # The recipe of `make e2e`, as two steps: the fetch prints the path of the
+      # verified binary, which the test step reads from GOG_BRIDGE_E2E_GOG. bash
+      # on both runners so the line is written once; the path keeps whatever
+      # separators the script printed.
+      - name: Fetch gog
+        shell: bash
+        run: echo "GOG_BRIDGE_E2E_GOG=$(uv run python scripts/fetch_gog.py)" >> "$GITHUB_ENV"
+
+      - name: End-to-end
+        run: uv run pytest -m e2e -v
