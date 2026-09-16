@@ -102,11 +102,11 @@ an assignment to `__annotations__` after the `def` is lost because `functools.wr
 - **Errors surface as `ToolError`.** `as_tool_errors` catches `GogBridgeError` only; a
   defect in this server crashes rather than being reported as the caller's mistake.
 - **No `.env` file.** `Settings` reads the process environment only; Claude Desktop's
-  working directory is not a place to pick up a file from. `GOG_BRIDGE_EXE` is validated as
-  an absolute existing file at startup, so tests must give `Settings` a real file.
-  `GOG_BRIDGE_ACCOUNTS` is annotated `NoDecode` (pydantic-settings 2.7) so the raw string
-  reaches `Accounts.parse` instead of the JSON decoding pydantic-settings applies to
-  non-scalar fields.
+  working directory is not a place to pick up a file from. `.env.example` documents the
+  variables and nothing reads it. `GOG_BRIDGE_EXE` is validated as an absolute existing file
+  at startup, so tests must give `Settings` a real file. `GOG_BRIDGE_ACCOUNTS` is annotated
+  `NoDecode` (pydantic-settings 2.7) so the raw string reaches `Accounts.parse` instead of
+  the JSON decoding pydantic-settings applies to non-scalar fields.
 
 ## Commands
 

@@ -49,6 +49,7 @@ surface, so a client already configured for the Go one only changes its `command
 - **Startup validation.** `GOG_BRIDGE_EXE` and `GOG_BRIDGE_ACCOUNTS` are required, and the
   executable must be an absolute path to an existing file. A bad environment exits with status
   2 and the list of what is expected on stderr. `gog-bridge --version` prints `gog-bridge 0.1.0`.
+  `.env.example` documents the variables; nothing reads it.
 - **A test suite that spawns real processes.** `tests/fake_gog.py` behind a shell wrapper on
   POSIX and a `.cmd` wrapper on Windows, written so the same asyncio runner runs on both, with a
   tripwire wrapper proving that a refused call never reached the executable. Covered: both
