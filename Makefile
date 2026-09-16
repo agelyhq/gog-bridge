@@ -28,7 +28,7 @@ e2e:
 	GOG_BRIDGE_E2E_GOG=$$(uv run python scripts/fetch_gog.py) uv run pytest -m e2e -v
 
 run:
-	uv run gog-bridge
+	uv run mcp-gog-bridge
 
 clean:
 	rm -rf dist .pytest_cache .ruff_cache .mypy_cache

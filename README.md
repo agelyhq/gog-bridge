@@ -1,4 +1,4 @@
-# 🌉 gog-bridge
+# 🌉 mcp-gog-bridge
 
 **A Google Workspace MCP server built for the reply, not the inbox.**
 
@@ -37,10 +37,10 @@ first among them, never run.
 ## 📦 Install
 
 ```bash
-uvx gog-bridge --version
+uvx mcp-gog-bridge --version
 ```
 
-That downloads the package into a throwaway environment, prints `gog-bridge 0.1.0` and exits.
+That downloads the package into a throwaway environment, prints `mcp-gog-bridge 0.1.0` and exits.
 Needs Python 3.12 or newer, [uv](https://docs.astral.sh/uv/), and gog v0.40 or newer with every
 account already signed in through `gog auth add` in a terminal: the bridge never signs in for
 you, since `auth` is one of the commands it refuses. Transport is stdio, and stdio is the only
@@ -55,7 +55,7 @@ In `claude_desktop_config.json`, on Windows `%APPDATA%\Claude\claude_desktop_con
   "mcpServers": {
     "gog": {
       "command": "uvx",
-      "args": ["gog-bridge"],
+      "args": ["mcp-gog-bridge"],
       "env": {
         "GOG_BRIDGE_EXE": "C:\\Users\\you\\gog\\gog.exe",
         "GOG_BRIDGE_ACCOUNTS": "perso=you@gmail.com,work=you@company.com"
@@ -145,7 +145,7 @@ the person, not to this server.
 
 **The first start is slow.** `uvx` downloads a Python and the package on its first run, about a
 minute on a normal connection, and Claude Desktop may report the server as failed before it is
-ready. Run `uvx gog-bridge --version` once in a terminal, then start the client. Later starts
+ready. Run `uvx mcp-gog-bridge --version` once in a terminal, then start the client. Later starts
 come from uv's cache and take about a second.
 
 **Output is bounded and time is bounded.** stdout is captured up to 200 000 bytes and stderr up

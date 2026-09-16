@@ -25,10 +25,10 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 Close the terminal and open a new one, then:
 
 ```bash
-uvx gog-bridge --version
+uvx mcp-gog-bridge --version
 ```
 
-That downloads a Python and the package into uv's cache, prints `gog-bridge 0.1.0` and exits.
+That downloads a Python and the package into uv's cache, prints `mcp-gog-bridge 0.1.0` and exits.
 It takes about a minute the first time and about a second afterwards, which is why this page
 asks you to run it once by hand: your MCP client will run the same command, and a client that
 waits a minute on a silent server tends to declare it dead.
@@ -69,7 +69,7 @@ Open `claude_desktop_config.json`. On Windows it is `%APPDATA%\Claude\claude_des
   "mcpServers": {
     "gog": {
       "command": "uvx",
-      "args": ["gog-bridge"],
+      "args": ["mcp-gog-bridge"],
       "env": {
         "GOG_BRIDGE_EXE": "C:\\Users\\you\\gog\\gog.exe",
         "GOG_BRIDGE_ACCOUNTS": "perso=you@gmail.com,work=you@company.com"
@@ -109,7 +109,7 @@ One command, and the same two variables:
 claude mcp add gog \
   -e GOG_BRIDGE_EXE=/usr/local/bin/gog \
   -e GOG_BRIDGE_ACCOUNTS=perso=you@gmail.com,work=you@company.com \
-  -- uvx gog-bridge
+  -- uvx mcp-gog-bridge
 ```
 
 ## A first command
@@ -171,8 +171,8 @@ settings of the Cowork session when it is next opened.
 ## Working on the source
 
 ```bash
-git clone https://github.com/agelyhq/gog-bridge.git
-cd gog-bridge
+git clone https://github.com/agelyhq/mcp-gog-bridge.git
+cd mcp-gog-bridge
 make install
 make check
 make e2e
@@ -181,7 +181,7 @@ make e2e
 `make check` runs lint and the unit suite, which drives the MCP surface against a fake gog and
 needs no network. `make e2e` runs `scripts/fetch_gog.py`, which downloads the gog v0.40.0
 release for the current OS, checks it against `checksums.txt`, and starts the installed
-`gog-bridge` console script as a real subprocess over stdio, the way Claude Desktop starts it,
+`mcp-gog-bridge` console script as a real subprocess over stdio, the way Claude Desktop starts it,
 inside an isolated configuration directory: `HOME` and `XDG_CONFIG_HOME` on POSIX, `APPDATA`,
 `LOCALAPPDATA` and `USERPROFILE` on Windows all point at a temporary directory, so the tier
 never reads or writes your own gog configuration. Both tiers run in CI on `ubuntu-latest` and

@@ -11,6 +11,9 @@ surface, so a client already configured for the Go one only changes its `command
 
 ### Added
 
+- **Package name `mcp-gog-bridge`.** The distribution on PyPI, the console script and the MCP
+  server name are all `mcp-gog-bridge`; the Python module stays `gog_bridge` and the environment
+  variables keep the `GOG_BRIDGE_` prefix.
 - **`gog_run(account, args, stdin=None)`.** Runs `gog --account <address> --no-input <args...>`
   on the account named by its alias and returns one text report: `exit_code: N`, stdout under
   `--- stdout ---`, stderr under `--- stderr ---`. A non-zero exit is returned as a tool error
@@ -48,7 +51,7 @@ surface, so a client already configured for the Go one only changes its `command
   on Python 3.12 and 3.13 (run 35086557317).
 - **Startup validation.** `GOG_BRIDGE_EXE` and `GOG_BRIDGE_ACCOUNTS` are required, and the
   executable must be an absolute path to an existing file. A bad environment exits with status
-  2 and the list of what is expected on stderr. `gog-bridge --version` prints `gog-bridge 0.1.0`.
+  2 and the list of what is expected on stderr. `mcp-gog-bridge --version` prints `mcp-gog-bridge 0.1.0`.
   `.env.example` documents the variables; nothing reads it.
 - **A test suite that spawns real processes.** `tests/fake_gog.py` behind a shell wrapper on
   POSIX and a `.cmd` wrapper on Windows, written so the same asyncio runner runs on both, with a
@@ -59,7 +62,7 @@ surface, so a client already configured for the Go one only changes its `command
 - **An end-to-end tier on the real binary.** `make e2e` downloads gog v0.40.0 for the current
   platform from the GitHub release with `scripts/fetch_gog.py` (standard library only, SHA256
   checked against `checksums.txt`, cached in `.cache/gog/`), then starts the installed
-  `gog-bridge` console script over stdio, as Claude Desktop does, in a home isolated under the
+  `mcp-gog-bridge` console script over stdio, as Claude Desktop does, in a home isolated under the
   test's temporary directory on POSIX and on Windows. Eight sessions: the tool list and its
   enum, `--version`, the full help of `gmail send`, two policy refusals, the unknown alias, and
   `drive ls` and `gmail send` failing inside gog for lack of credentials, with the path gog

@@ -115,15 +115,15 @@ way to use them.
 
 ## Where uv puts things
 
-`uvx gog-bridge` does not install anything permanently. On its first run uv downloads a Python
+`uvx mcp-gog-bridge` does not install anything permanently. On its first run uv downloads a Python
 if none suitable is present, resolves the package and its dependencies, and builds an
 environment in its cache: `%LOCALAPPDATA%\uv\cache` on Windows, `~/.cache/uv` on Linux and
 macOS unless `UV_CACHE_DIR` says otherwise. Later runs reuse that environment and start in about
 a second without touching the network.
 
-Because the package is unpinned, uv resolves the latest published `gog-bridge` when its cache
-does not already have one; `uv cache clean gog-bridge` makes the next start fetch the newest
-release. To hold a version still, write `"args": ["gog-bridge@0.1.0"]`.
+Because the package is unpinned, uv resolves the latest published `mcp-gog-bridge` when its cache
+does not already have one; `uv cache clean mcp-gog-bridge` makes the next start fetch the newest
+release. To hold a version still, write `"args": ["mcp-gog-bridge@0.1.0"]`.
 
 ## A complete client config, one account
 
@@ -132,7 +132,7 @@ release. To hold a version still, write `"args": ["gog-bridge@0.1.0"]`.
   "mcpServers": {
     "gog": {
       "command": "C:\\Users\\you\\.local\\bin\\uvx.exe",
-      "args": ["gog-bridge"],
+      "args": ["mcp-gog-bridge"],
       "env": {
         "GOG_BRIDGE_EXE": "C:\\Users\\you\\gog\\gog.exe",
         "GOG_BRIDGE_ACCOUNTS": "work=you@company.com"
@@ -152,7 +152,7 @@ absolute `uvx.exe` path is the Windows form; on Linux and macOS `"command": "uvx
   "mcpServers": {
     "gog": {
       "command": "uvx",
-      "args": ["gog-bridge"],
+      "args": ["mcp-gog-bridge"],
       "env": {
         "GOG_BRIDGE_EXE": "/usr/local/bin/gog",
         "GOG_BRIDGE_ACCOUNTS": "perso=you@gmail.com,work=you@company.com,asso=tresorier@club.org",

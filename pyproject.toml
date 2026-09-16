@@ -1,5 +1,5 @@
 [project]
-name = "gog-bridge"
+name = "mcp-gog-bridge"
 version = "0.1.0"
 description = "MCP server exposing the whole gog CLI (Gmail, Calendar, Drive, Docs, Sheets, Slides, Contacts) to Claude Desktop through two policed tools"
 readme = "README.md"
@@ -40,13 +40,13 @@ dependencies = [
 ]
 
 [project.scripts]
-gog-bridge = "gog_bridge.__main__:main"
+mcp-gog-bridge = "gog_bridge.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/agelyhq/gog-bridge"
-Repository = "https://github.com/agelyhq/gog-bridge"
-Issues = "https://github.com/agelyhq/gog-bridge/issues"
-Changelog = "https://github.com/agelyhq/gog-bridge/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/agelyhq/mcp-gog-bridge"
+Repository = "https://github.com/agelyhq/mcp-gog-bridge"
+Issues = "https://github.com/agelyhq/mcp-gog-bridge/issues"
+Changelog = "https://github.com/agelyhq/mcp-gog-bridge/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

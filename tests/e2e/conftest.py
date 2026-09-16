@@ -1,6 +1,6 @@
 """Fixtures for the end-to-end tier: the installed console script against the real gog.
 
-The bridge starts as Claude Desktop starts it, the `gog-bridge` executable of
+The bridge starts as Claude Desktop starts it, the `mcp-gog-bridge` executable of
 this environment on stdio, and the client is fastmcp's StdioTransport. The gog
 it points at is the real v0.40.0 binary named by GOG_BRIDGE_E2E_GOG, usually put
 there by scripts/fetch_gog.py. Every directory gog could read a configuration or
@@ -33,7 +33,7 @@ SKIP_REASON = (
     f"{E2E_GOG_ENV} does not name an existing gog binary; "
     "run `make e2e`, or scripts/fetch_gog.py and export the path it prints"
 )
-CONSOLE_SCRIPT = "gog-bridge"
+CONSOLE_SCRIPT = "mcp-gog-bridge"
 
 PERSO = "perso@example.invalid"
 WORK = "work@example.invalid"

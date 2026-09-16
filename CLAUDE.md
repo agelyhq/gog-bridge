@@ -1,4 +1,4 @@
-# CLAUDE.md, gog-bridge
+# CLAUDE.md, mcp-gog-bridge
 
 ## Purpose
 
@@ -142,7 +142,7 @@ the e2e tier; `tests/conftest.py` keeps the fixtures and `echoed`.
 
 ### The end-to-end tier
 
-`tests/e2e/` starts the installed console script `gog-bridge` as a real subprocess over
+`tests/e2e/` starts the installed console script `mcp-gog-bridge` as a real subprocess over
 stdio, the way Claude Desktop starts it, through `fastmcp.client.transports.StdioTransport`,
 against the real gog v0.40.0 binary named by `GOG_BRIDGE_E2E_GOG`. Without that variable, or
 if it names no file, every test in the directory is skipped with the reason; the marker

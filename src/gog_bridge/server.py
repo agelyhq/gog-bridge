@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from gog_bridge.config import Settings
     from gog_bridge.domain.commands import CommandRunner
 
-DISTRIBUTION = "gog-bridge"
+DISTRIBUTION = "mcp-gog-bridge"
 
 INSTRUCTIONS = """\
 Bridge to the gog command line tool for Google Workspace: Gmail, Calendar,

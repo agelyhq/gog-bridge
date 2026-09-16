@@ -78,7 +78,7 @@ def load_settings() -> Settings:
 
 
 def _describe(exc: ValidationError) -> str:
-    lines = ["gog-bridge cannot start: invalid environment."]
+    lines = ["mcp-gog-bridge cannot start: invalid environment."]
     for error in exc.errors():
         variable = str(error["loc"][0]).upper() if error["loc"] else "environment"
         lines.append(f"  {variable}: {error['msg']}")

@@ -1,4 +1,4 @@
-# gog-bridge documentation
+# mcp-gog-bridge documentation
 
 The [project README](../README.md) says what this server is and why it exists. These pages say
 how to drive it, what it refuses, and what to do when a call comes back wrong.

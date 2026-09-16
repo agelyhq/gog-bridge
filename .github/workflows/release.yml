@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/gog-bridge
+      url: https://pypi.org/p/mcp-gog-bridge
     permissions:
       id-token: write
     steps:

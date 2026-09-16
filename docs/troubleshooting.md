@@ -26,7 +26,7 @@ entry leaves nothing.
    silently ignores the whole file.
 2. That the client was fully restarted after the edit. On Windows, closing the window leaves it
    running in the tray; quit from the tray icon.
-3. The MCP log. `gog-bridge cannot start: invalid environment.` means the `env` block is wrong,
+3. The MCP log. `mcp-gog-bridge cannot start: invalid environment.` means the `env` block is wrong,
    and the next lines name the variable and the reason: a missing `GOG_BRIDGE_EXE`, a relative
    path, `no file at <path>`, a `GOG_BRIDGE_ACCOUNTS` that does not parse or is absent because
    the block still sets the former `GOG_BRIDGE_ACCOUNT_PERSO` and `GOG_BRIDGE_ACCOUNT_WORK`. The
@@ -50,11 +50,11 @@ since the PATH the client inherits is the session's and the session read it at l
 **What you see.** The server shows as starting, or as failed, for about a minute after a fresh
 install, then works on the next restart.
 
-**What it means.** `uvx` downloads a Python and the `gog-bridge` package on its first run, and
+**What it means.** `uvx` downloads a Python and the `mcp-gog-bridge` package on its first run, and
 the client's patience is shorter than the download. Nothing is wrong; the second start reads
 from uv's cache and takes about a second ([configuration.md](configuration.md) says where that
-cache is). Run `uvx gog-bridge --version` in a terminal before the first start of the client: it
-prints `gog-bridge 0.1.0` after the download, and it also gives an antivirus or SmartScreen its
+cache is). Run `uvx mcp-gog-bridge --version` in a terminal before the first start of the client: it
+prints `mcp-gog-bridge 0.1.0` after the download, and it also gives an antivirus or SmartScreen its
 first look at the cached Python, which is the other thing that makes a first start slow.
 
 ## Commande refusée par la politique du pont
@@ -246,5 +246,5 @@ the account in the request when the context is ambiguous.
 The report carries gog's own message wherever there is one, so the `--- stderr ---` block is
 worth reading in full before assuming the problem is in the bridge. If a failure looks like a
 genuine bug here rather than a refusal from gog or from Google, open an issue at
-[github.com/agelyhq/gog-bridge/issues](https://github.com/agelyhq/gog-bridge/issues) with the
+[github.com/agelyhq/mcp-gog-bridge/issues](https://github.com/agelyhq/mcp-gog-bridge/issues) with the
 tool name, the `args` array and the exact report.

@@ -48,14 +48,14 @@ def test_main_version_prints_name_and_version(tmp_path: Path) -> None:
     completed = _run(["--version"], _clean_env(), tmp_path)
 
     assert completed.returncode == 0
-    assert completed.stdout.strip() == f"gog-bridge {version('gog-bridge')}"
+    assert completed.stdout.strip() == f"mcp-gog-bridge {version('mcp-gog-bridge')}"
 
 
 def test_main_refuses_to_start_without_the_required_variables(tmp_path: Path) -> None:
     completed = _run([], _clean_env(), tmp_path)
 
     assert completed.returncode != 0
-    assert "gog-bridge cannot start" in completed.stderr
+    assert "mcp-gog-bridge cannot start" in completed.stderr
     for name in ("GOG_BRIDGE_EXE", "GOG_BRIDGE_ACCOUNTS"):
         assert name in completed.stderr, name
 
