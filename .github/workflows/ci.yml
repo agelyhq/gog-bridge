@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint and test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is the target platform of the bridge, so the tests run there
+        # too: the .cmd wrapper, CREATE_NO_WINDOW and the process-tree kill are
+        # only exercised on a Windows runner.
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          # Matrix jobs otherwise compute the same cache key and race to save
+          # it, which makes the losers warn on every run.
+          cache-suffix: ${{ matrix.os }}-py${{ matrix.python-version }}
+
+      - name: Install
+        run: uv sync --all-extras --python ${{ matrix.python-version }}
+
+      # The recipes of `make lint` and `make test`, spelled out because GNU make
+      # is not guaranteed on the Windows runner image. Keep them in step with
+      # the Makefile.
+      - name: Lint
+        run: |
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+          uv run mypy
+
+      - name: Test
+        run: uv run pytest
